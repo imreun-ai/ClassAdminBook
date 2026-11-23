@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>សៀវភៅរដ្ឋបាលថ្នាក់</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&family=Noto+Sans+Khmer:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky tab bar over one working column; on wide screens the controls sit left and the live A4 preview right. */
+:root{
+  --bg:#f3f5fa; --surface:#ffffff; --fg:#14203f; --muted:#5a6684; --line:#d9dfec;
+  --primary:#0b2560; --primary-fg:#ffffff; --accent:#0d7a84; --soft:#e7ecf8; --danger:#b3261e; --ok:#1c7a43;
+  --font-ui:"Noto Sans Khmer","Battambang",system-ui,sans-serif;
+  --font-display:"Moul","Khmer OS Muol Light","Noto Sans Khmer",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1324; --surface:#151c33; --fg:#e8ecf8; --muted:#9ca8c8; --line:#283252;
+  --primary:#8aa5f5; --primary-fg:#0b1430; --accent:#4cc3cd; --soft:#1e2745; --danger:#ff8a80; --ok:#6fd49a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1324; --surface:#151c33; --fg:#e8ecf8; --muted:#9ca8c8; --line:#283252;
+  --primary:#8aa5f5; --primary-fg:#0b1430; --accent:#4cc3cd; --soft:#1e2745; --danger:#ff8a80; --ok:#6fd49a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.top{max-width:1240px;margin:0 auto;padding:18px 0 10px}
+.top h1{font:400 clamp(17px,3.6vw,22px)/1.7 var(--font-display);color:var(--primary);margin:0}
+.top p{margin:0;color:var(--muted);font-size:13px}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  margin:0 auto;max-width:1240px;display:flex;gap:4px;overflow-x:auto;padding:6px 0}
+.tab{flex:none;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:500;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--primary);color:var(--primary-fg)}
+.tab:hover:not([aria-selected="true"]){background:var(--soft);color:var(--fg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1240px;margin:18px auto 0}
+.muted{color:var(--muted);font-size:13px}
+.syncwrap{max-width:1240px;margin:12px auto 0}
+.syncbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
+summary{min-height:24px}
+.split{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:980px){.split{grid-template-columns:minmax(320px,430px) minmax(0,1fr);align-items:start}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card+.card{margin-top:16px}
+h2{font-size:16px;margin:0 0 12px;font-weight:700}
+h3{font-size:14px;margin:16px 0 6px;font-weight:700;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;min-width:0}
+.field>label,.lbl{font-size:13px;color:var(--muted);font-weight:500}
+input[type=text],input[type=tel],select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:130px;resize:vertical;font-size:14px}
+.inline{display:flex;gap:8px;align-items:center;min-width:0}
+.inline>input,.inline>select{flex:1}
+.btn{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn.danger{color:var(--danger)}
+.nodl-note{display:none;font-size:13px;color:var(--muted);margin-top:8px}
+.nodl .nodl-note{display:block}
+.cgrid{display:flex;flex-direction:column;gap:6px}
+.crow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.crow .g{width:88px;font-size:13px;color:var(--muted);flex:none}
+.chip{min-width:38px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--primary);color:var(--primary-fg);border-color:var(--primary)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip.x::after{content:" ×";opacity:.7}
+.logo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo-row img{width:56px;height:56px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:#fff}
+.logo-ph{width:56px;height:56px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:11px;text-align:center}
+.help{font-size:13px;color:var(--muted);margin:6px 0 0}
+.msg{font-size:13px;margin-top:8px;color:var(--ok)}
+.msg.err{color:var(--danger)}
+.roster{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rost{border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.rost header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--soft);font-weight:700;gap:8px}
+.rost ol{margin:0;padding:8px 12px 8px 36px;max-height:240px;overflow:auto;font-size:14px}
+.rost li span{color:var(--muted);font-size:12px;margin-left:6px}
+.rost p{margin:0;padding:10px 12px;color:var(--muted);font-size:13px}
+.pvhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pvhead h2{margin:0}
+.pv{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:14px;min-width:0}
+.pvbox{box-shadow:0 2px 14px rgba(10,20,50,.28);max-width:100%;flex:none}
+.pvhint{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--primary);color:var(--primary-fg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:40;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="top">
+  <h1>សៀវភៅរដ្ឋបាលថ្នាក់</h1>
+  <p>ប្រព័ន្ធធ្វើសៀវភៅរដ្ឋបាលបង្រៀន: កំណត់ព័ត៌មានម្តង ហើយបង្កើតក្របនិងឯកសារព្រីនបានទាំងអស់។</p>
+</div>
+<nav class="tabs" role="tablist" aria-label="ផ្នែក" id="tabs"></nav>
+<div class="syncwrap"><div class="syncbar" id="syncbar"></div></div>
+<main id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KH = '០១២៣៤៥៦៧៨៩';
+const toKh = n => String(n).replace(/\d/g, d => KH[d]);
+const MINISTRY = 'ក្រសួង អប់រំ យុវជន និង កីឡា';
+const INNER = ['ប្រជុំការងារផ្សេងៗ','ប្រជុំក្រុមបច្ចេកទេស','សម្រង់អត្ថបទ','កម្មវិធីសិក្សា','ជួយសិស្សរៀនយឺត','សម្រង់ពិន្ទុ','សម្រង់អវត្តមានសិស្ស'];
+const KINDS = {
+  meeting:{label:'ក. ប្រជុំការងារផ្សេងៗ', title:'ប្រជុំការងារផ្សេងៗ', byClass:false, monthly:true},
+  tech:{label:'ខ. ប្រជុំក្រុមបច្ចេកទេស', title:'ប្រជុំបច្ចេកទេស', byClass:false, monthly:true},
+  extract:{label:'គ. សម្រង់អត្ថបទ', title:'សម្រង់អត្ថបទ', byClass:true},
+  absence:{label:'ឃ. សម្រង់អវត្តមានសិស្ស', title:'សម្រង់អវត្តមានសិស្ស', byClass:true},
+  scores:{label:'ង. សម្រង់ពិន្ទុ', title:'សម្រង់ពិន្ទុសិស្ស', byClass:true},
+  slow:{label:'ច. ជួយសិស្សរៀនយឺត', title:'សកម្មភាព និងលទ្ធផលជួយសិស្សរៀនយឺត', byClass:true}
+};
+let toastTimer;
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('on'),3200);}
+
+/* ---------- roster parsing ---------- */
+//<parser>
+const KHD = '០១២៣៤៥៦៧៨៩';
+const CLS = /^[0-9០-៩]{1,2}\s*[A-Za-z]{0,2}$/;
+const normCls = c => String(c).replace(/\s+/g,'').replace(/[០-៩]/g, d => KHD.indexOf(d)).toUpperCase();
+function normSex(x){
+  x = (x||'').trim(); if(!x) return '';
+  if (/^(ប្រុស|ប|m|male|boy)$/i.test(x)) return 'ប';
+  if (/^(ស្រី|ស|f|female|girl)$/i.test(x)) return 'ស';
+  return x;
+}
+function parseDelimited(text, d){
+  const rows=[]; let row=[], cell='', q=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else if (c==='"' && cell==='') q=true;
+    else if (c===d){ row.push(cell); cell=''; }
+    else if (c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+    else if (c==='\r'){}
+    else cell+=c;
+  }
+  row.push(cell); rows.push(row);
+  return rows.map(r=>r.map(x=>x.trim())).filter(r=>r.some(x=>x));
+}
+function parseRoster(text, fb){
+  const d = text.includes('\t') ? '\t' : ',';
+  const rows = parseDelimited(text, d);
+  const out = {}; let total = 0;
+  const add = (c, n, sx) => {
+    n = String(n||'').replace(/^\s*[0-9០-៩]+\s*[\.\)]\s*/,'').trim();
+    if (!n || /^[0-9០-៩]+$/.test(n)) return;
+    (out[c] = out[c] || []).push({name:n, sex:normSex(sx)}); total++;
+  };
+  if (!rows.length) return {byClass:out,total:0};
+  // layout 1: one column per class (class name in the first row)
+  const cand = [];
+  rows[0].forEach((x,j) => { if (CLS.test(x)) cand.push(j); });
+  const isMatrix = cand.length && cand.every(j => rows.slice(1).filter(r => CLS.test(r[j]||'')).length <= Math.max(1, rows.length*0.2));
+  if (isMatrix){
+    cand.forEach(j => {
+      const c = normCls(rows[0][j]);
+      const sexCol = /ភេទ/.test(rows[0][j+1]||'') ? j+1 : -1;
+      rows.slice(1).forEach(r => add(c, r[j], sexCol>=0 ? r[sexCol] : ''));
+    });
+    return {byClass:out,total};
+  }
+  // layout 2: header row with separate "name" / "class" / "sex" columns
+  const hi = rows.slice(0,6).findIndex(r => r.some(x => /ឈ្មោះ|គោត្តនាម|នាម/.test(x) && !/ថ្នាក់/.test(x)) || r.some(x => /^ថ្នាក់$/.test(x)));
+  if (hi >= 0){
+    const h = rows[hi];
+    const iName = h.findIndex(x => /ឈ្មោះ|គោត្តនាម|នាម/.test(x) && !/ថ្នាក់/.test(x));
+    const iCls = h.findIndex(x => /ថ្នាក់/.test(x) && !/ឈ្មោះ/.test(x));
+    const iSex = h.findIndex(x => /ភេទ/.test(x));
+    if (iName >= 0){
+      rows.slice(hi+1).forEach(r => {
+        const c = iCls>=0 && r[iCls] ? normCls(r[iCls]) : fb;
+        add(c, r[iName], iSex>=0 ? r[iSex] : '');
+      });
+      return {byClass:out,total};
+    }
+  }
+  // layout 3: no header
+  rows.forEach(r => {
+    let cells = r.filter(x => x !== '');
+    if (cells.length >= 2 && /^[0-9០-៩]+$/.test(cells[0])) cells = cells.slice(1);
+    if (!cells.length) return;
+    if (cells.length >= 2 && CLS.test(cells[0])) add(normCls(cells[0]), cells[1], cells[2]);
+    else if (cells.length >= 2 && CLS.test(cells[1])) add(normCls(cells[1]), cells[0], cells[2]);
+    else add(fb, cells[0], cells[1]);
+  });
+  return {byClass:out,total};
+}
+function sortClasses(a){
+  return [...new Set(a)].sort((x,y)=>{const nx=parseInt(x)||0, ny=parseInt(y)||0; return nx-ny || String(x).localeCompare(String(y));});
+}
+//</parser>
+
+/* ---------- state ---------- */
+const KEY = 'sovphov-radthabal-v1';
+const DEFAULT = {
+  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
+  students:{}, sheet:{classes:[],teachers:[],at:0},
+  ui:{tab:'settings', inner:'ប្រជុំការងារផ្សេងៗ', kind:'meeting', cls:'all', month:'', titles:{}, target:''}
+};
+let S = JSON.parse(JSON.stringify(DEFAULT));
+try{
+  const raw = localStorage.getItem(KEY);
+  if (raw){ const p = JSON.parse(raw); S = {s:{...DEFAULT.s,...p.s}, students:p.students||{}, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...p.ui}}; }
+}catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const classes = () => sortClasses(S.s.classes);
+
+/* ---------- document CSS (shared by the live preview and the downloaded file) ---------- */
+const DOC_CSS = `
+.sheet{box-sizing:border-box;width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff;color:#111;font-family:"Battambang","Khmer OS Battambang","Noto Sans Khmer",sans-serif;font-size:11pt;line-height:1.45;text-align:left}
+.sheet.land{width:297mm;height:210mm}
+.sheet *{box-sizing:border-box}
+.fit{display:block;width:100%;white-space:nowrap;text-align:center}
+.cv{font-family:"Moul","Khmer OS Muol Light","Noto Sans Khmer",serif}
+.cv .cv-frame{position:absolute;inset:3mm;border:.3mm solid #222}
+.cv .cv-strip{position:absolute;left:3mm;top:3mm;bottom:30mm;width:26.6mm;display:block}
+.cv .cv-head{position:absolute;left:29.6mm;top:3mm;right:3mm;height:58mm;background:#0a2561;color:#fff}
+.cv .cv-k1{position:absolute;top:6mm;left:0;right:0;text-align:center;font-size:13pt;line-height:1.7}
+.cv .cv-k2{position:absolute;top:15mm;left:0;right:0;text-align:center;font-size:11pt;line-height:1.7}
+.cv .cv-logo{position:absolute;left:20mm;top:20mm;width:25mm;height:25mm;object-fit:contain}
+.cv .cv-min{position:absolute;left:3mm;bottom:12mm;font-size:11pt;line-height:1.7;white-space:nowrap}
+.cv .cv-wave{position:absolute;left:0;bottom:-.3mm;width:100%;height:11mm;display:block}
+.cv .cv-body{position:absolute;left:33mm;right:7mm;top:65mm;bottom:31mm;display:flex;flex-direction:column;justify-content:space-between}
+.cv .cv-body>div{display:flex;flex-direction:column;gap:3.5mm;min-width:0}
+.cv .cv-dep{color:#5f8a2a;font-size:12pt;line-height:1.7;text-align:left}
+.cv .cv-off{color:#1a3bc4;font-size:12pt;line-height:1.7;text-align:left}
+.cv .cv-sch{color:#0d2a6b;font-size:26pt;line-height:1.7}
+.cv .cv-book{color:#6b2c91;font-size:20pt;line-height:1.7;text-align:center}
+.cv .cv-t1{color:#e5121b;font-size:36pt;line-height:1.7}
+.cv .cv-t2{color:#a31212;font-size:30pt;line-height:1.7}
+.cv .cv-name{color:#e11fd0;font-size:23pt;line-height:1.7}
+.cv .cv-sub{color:#08c9ad;font-size:26pt;line-height:1.7}
+.cv .cv-cls{color:#3b5bff;font-size:19pt;line-height:1.7}
+.cv .cv-tel{color:#0f7c7c;font-size:19pt;line-height:1.7}
+.cv .cv-foot{position:absolute;left:3mm;right:3mm;bottom:3mm;height:27mm;background:#0a2561;color:#fff;display:flex;align-items:center;padding:0 8mm}
+.cv .cv-foot .fit{font-size:28pt;line-height:1.7}
+.pg{position:absolute;inset:0;padding:13mm 15mm 12mm;display:flex;flex-direction:column}
+.ttl{font-family:"Moul","Khmer OS Muol Light","Noto Sans Khmer",serif;font-size:15pt;text-align:center;margin:0 0 5mm;line-height:1.7}
+.row{display:flex;align-items:flex-end;gap:2mm;margin:1.5mm 0;white-space:nowrap}
+.row .fill,.num .fill,.ln2 .fill{flex:1;border-bottom:.35mm dotted #333;height:6mm;min-width:8mm}
+.sec{font-weight:700;margin:3.5mm 0 .5mm}
+.num{display:flex;align-items:flex-end;gap:2mm;height:8mm}
+.num b{width:7mm;font-weight:400}
+.ruled{flex:1;min-height:0;overflow:hidden}
+.ln{height:8.5mm;border-bottom:.35mm dotted #333}
+.dots{display:inline-block;border-bottom:.35mm dotted #333;min-width:30mm;height:1em}
+table.t{border-collapse:collapse;width:100%;table-layout:fixed}
+table.t th,table.t td{border:.3mm solid #222;padding:0 .8mm;text-align:center;font-size:9pt;overflow:hidden;line-height:1.3}
+table.t th{font-weight:700;background:#eee}
+table.t td.l{text-align:left;font-size:10pt;white-space:nowrap}
+.ln2{display:flex;align-items:flex-end;gap:2mm;height:8.5mm;white-space:nowrap;font-size:10pt}
+table.t td.blk{padding:0 1.5mm;vertical-align:bottom;text-align:left}
+`;
+const PRINT_CSS = `
+body{margin:0;background:#7a7f8c;padding:14px}
+.bar{max-width:210mm;margin:0 auto 12px;display:flex;gap:12px;align-items:center;font-family:sans-serif;color:#fff;font-size:14px;flex-wrap:wrap}
+.bar button{font:inherit;padding:8px 16px;border:0;border-radius:6px;background:#0b2560;color:#fff;cursor:pointer}
+.sheet{margin:0 auto 14px;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+@media print{body{background:#fff;padding:0}.bar{display:none}.sheet{margin:0;box-shadow:none;break-after:page;height:296.4mm}.sheet.land{height:209.4mm}.sheet:last-of-type{break-after:auto}}
+`;
+function fitAll(root){
+  root.querySelectorAll('.fit').forEach(function(el){
+    el.style.fontSize='';
+    var fs=parseFloat(getComputedStyle(el).fontSize), box=el.clientWidth, n=0;
+    while(el.scrollWidth>box+1 && fs>7 && n++<90){ fs-=0.5; el.style.fontSize=fs+'px'; }
+  });
+}
+const FIT_JS = 'var fitAll='+fitAll.toString()+';fitAll(document);if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){fitAll(document)});}';
+
+/* ---------- covers ---------- */
+function coverHTML(innerTitle){
+  const s = S.s;
+  const mid = innerTitle ? `<div class="cv-t2 fit">${esc(innerTitle)}</div>` : `<div class="cv-t1 fit">រដ្ឋបាលថ្នាក់</div>`;
+  const logo = s.logo ? `<img class="cv-logo" src="${s.logo}" alt="">` : '';
+  return `<section class="sheet cv">
+<div class="cv-frame"></div><svg class="cv-strip" viewBox="0 0 26.6 264" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="ck" width="3.2" height="3.2" patternUnits="userSpaceOnUse"><rect width="3.2" height="3.2" fill="#ffffff"/><rect width="1.6" height="1.6" fill="#222222"/><rect x="1.6" y="1.6" width="1.6" height="1.6" fill="#222222"/></pattern></defs><rect width="26.6" height="264" fill="url(#ck)"/></svg>
+<div class="cv-head"><div class="cv-k1">ព្រះរាជាណាចក្រកម្ពុជា</div><div class="cv-k2">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>${logo}<div class="cv-min">${MINISTRY}</div>
+<svg class="cv-wave" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20V9C22 22 52 -3 100 11V20Z" fill="#ffffff"/></svg></div>
+<div class="cv-body">
+ <div><div class="cv-dep fit">${esc(s.department)}</div><div class="cv-off fit">${esc(s.office)}</div></div>
+ <div><div class="cv-sch fit">${esc(s.school)}</div><div class="cv-book">សៀវភៅ</div>${mid}
+  <div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div><div class="cv-sub fit">មុខវិជ្ជាបង្រៀន ${esc(s.subject)}</div>
+  <div class="cv-cls fit">បង្រៀនថ្នាក់ទី ${esc(classes().join(','))}</div></div>
+ <div><div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div></div>
+</div>
+<div class="cv-foot"><div class="fit">ឆ្នាំសិក្សា ${esc(s.year)}</div></div>
+</section>`;
+}
+
+/* ---------- print forms ---------- */
+const numbered = n => Array.from({length:n},(_,i)=>`<div class="num"><b>${toKh(i+1)}.</b><i class="fill"></i></div>`).join('');
+const lines = n => Array.from({length:n},()=>'<div class="ln"></div>').join('');
+const frow = (...p) => `<div class="row">${p.map(x=>x===null?'<i class="fill"></i>':`<span>${x}</span>`).join('')}</div>`;
+function titleOf(kind){ return (S.ui.titles[kind] || KINDS[kind].title); }
+function students(c){ return S.students[c] || []; }
+function chunkRows(total, n1, n2){
+  const need = total > 0 ? total : 30, pages = [];
+  let i = 0, cap = n1;
+  while (i < need){ pages.push([i, Math.min(i + cap, need)]); i += cap; cap = n2; }
+  return pages;
+}
+function rosterTable(cls, head, nCols, n1, n2, title, rowH){
+  const list = students(cls);
+  return chunkRows(list.length, n1, n2).map((rg, pi) => {
+    let body = '';
+    for (let i = rg[0]; i < rg[1]; i++){
+      const st = list[i];
+      body += `<tr style="height:${rowH}mm"><td>${i+1}</td><td class="l">${st?esc(st.name):''}</td><td>${st?esc(st.sex):''}</td>${'<td></td>'.repeat(nCols)}</tr>`;
+    }
+    return `<section class="sheet"><div class="pg">${pi===0?`<div class="ttl">${esc(title)} ថ្នាក់ទី ${esc(cls)}</div>`:'<div style="height:6mm"></div>'}<table class="t">${head}<tbody>${body}</tbody></table></div></section>`;
+  });
+}
+const DEF_MONTHS = {absence:'១១, ១២, ១, ២, ៣, ៤, ៥, ៦, ៧, ៨', scores:'ដើមឆ្នាំ, ១១, ១២, ១, ២, ឆ១, ៥, ៦, ៧, ៨, ឆ២'};
+function monthList(kind){
+  const raw = (S.ui.monthsBy && S.ui.monthsBy[kind] != null) ? S.ui.monthsBy[kind] : DEF_MONTHS[kind];
+  const a = String(raw).split(/[,،;\n]+/).map(x => x.trim()).filter(Boolean);
+  return a.length ? a.slice(0, 14) : DEF_MONTHS[kind].split(', ');
+}
+function buildPrint(kind){
+  const k = KINDS[kind];
+  const month = S.ui.month ? esc(S.ui.month) : '<i class="dots"></i>';
+  const T = esc(titleOf(kind));
+  if (kind === 'meeting'){
+    return {land:false, file:'meeting.html', pages:[`<section class="sheet"><div class="pg">
+<div class="ttl">${T} ប្រចាំខែ ${month}</div>
+${frow('កាលបរិច្ឆេទ៖', null)}
+<div class="sec">គណអធិបតី</div>${numbered(5)}
+<div class="sec">របៀបវារៈ</div>${numbered(5)}
+<div class="sec">ខ្លឹមសារ</div><div class="ruled">${lines(40)}</div></div></section>`]};
+  }
+  if (kind === 'tech'){
+    return {land:false, file:'technical-meeting.html', pages:[`<section class="sheet"><div class="pg">
+<div class="ttl">${T} ប្រចាំខែ ${month}</div>
+${frow('កាលបរិច្ឆេទ៖', null)}
+<div class="sec">របៀបវារៈ</div>${numbered(5)}
+${frow('ចាប់ពីម៉ោង', null, 'ដល់ម៉ោង', null)}
+${frow('បង្រៀននិងបង្ហាញដោយលោកគ្រូ/អ្នកគ្រូ ឈ្មោះ', null, 'បង្រៀនថ្នាក់ទី', null)}
+${frow('មុខវិជ្ជា៖', null)}
+<div class="sec">១. ចំណុចល្អ</div>${lines(3)}
+<div class="sec">២. ចំណុចកែលម្អ</div>${lines(3)}
+<div class="sec">បទពិសោធន៍ដែលទទួលបាន</div><div class="ruled">${lines(40)}</div></div></section>`]};
+  }
+  const cl = S.ui.cls === 'all' ? classes() : [S.ui.cls];
+  if (!cl.length) return {pages:[], land:false, file:'', empty:true};
+  let pages = [], land = false, file = kind + (S.ui.cls==='all' ? '-all' : '-' + S.ui.cls) + '.html';
+  cl.forEach(c => {
+    if (kind === 'extract'){
+      land = true;
+      const cols = [28,22,40,0,16,16,30];
+      const head = `<colgroup>${cols.map(w=>w?`<col style="width:${w}mm">`:'<col>').join('')}</colgroup><thead><tr style="height:9mm">${['កាលបរិច្ឆេទ','ជំពូក','មេរៀន','ខ្លឹមសារ','ទំព័រ','ម៉ោង','ផ្សេងៗ'].map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+      const body = Array.from({length:15},()=>`<tr style="height:10mm">${'<td></td>'.repeat(7)}</tr>`).join('');
+      pages.push(`<section class="sheet land"><div class="pg" style="padding:11mm 12mm"><div class="ttl" style="margin-bottom:4mm">${T} ថ្នាក់ទី ${esc(c)}</div><table class="t">${head}<tbody>${body}</tbody></table></div></section>`);
+    } else if (kind === 'absence'){
+      const months = [...monthList('absence'), 'សរុប'];
+      const aw = Math.min(5.6, 130 / (months.length * 2)).toFixed(2);
+      const head = `<colgroup><col style="width:8mm"><col><col style="width:9mm">${('<col style="width:'+aw+'mm">').repeat(months.length*2)}</colgroup><thead><tr style="height:7mm"><th rowspan="2">ល.រ</th><th rowspan="2">គោត្តនាម-នាម</th><th rowspan="2">ភេទ</th>${months.map(m=>`<th colspan="2">${m}</th>`).join('')}</tr><tr style="height:6mm">${months.map(()=>'<th>ច</th><th>អ</th>').join('')}</tr></thead>`;
+      pages.push(...rosterTable(c, head, months.length*2, 32, 35, T, 7));
+    } else if (kind === 'scores'){
+      const cols = monthList('scores');
+      const sw = Math.min(11, 130 / cols.length).toFixed(2);
+      const head = `<colgroup><col style="width:8mm"><col><col style="width:9mm">${('<col style="width:'+sw+'mm">').repeat(cols.length)}</colgroup><thead><tr style="height:12mm"><th>ល.រ</th><th>គោត្តនាម-នាម</th><th>ភេទ</th>${cols.map(m=>`<th>${m}</th>`).join('')}</tr></thead>`;
+      pages.push(...rosterTable(c, head, cols.length, 33, 36, T, 7));
+    } else if (kind === 'slow'){
+      const blocks = Array.from({length:9},()=>`<tr style="height:26mm"><td></td>
+<td class="blk"><div class="ln2"><span>សិស្សឈ្មោះ</span><i class="fill"></i><span>ហត្ថលេខា</span><i class="fill" style="flex:0 0 22mm"></i></div><div class="ln2"><span>គ្រូបាន</span><i class="fill"></i></div><div class="ln2"><i class="fill"></i></div></td>
+<td class="blk"><div class="ln2"><span>សិស្សអាច</span><i class="fill"></i></div><div class="ln2"><i class="fill"></i></div><div class="ln2"><i class="fill"></i></div></td></tr>`).join('');
+      pages.push(`<section class="sheet"><div class="pg" style="padding:12mm 12mm"><div class="ttl" style="font-size:13pt;margin-bottom:4mm">${T} ថ្នាក់ទី ${esc(c)}</div><table class="t"><colgroup><col style="width:26mm"><col><col style="width:68mm"></colgroup><thead><tr style="height:9mm"><th>កាលបរិច្ឆេទ</th><th>សកម្មភាព</th><th>លទ្ធផល</th></tr></thead><tbody>${blocks}</tbody></table></div></section>`);
+    }
+  });
+  return {pages, land, file};
+}
+function pagesFor(tab){
+  if (tab === 'cover') return {pages:[coverHTML('')], land:false, file:'cover.html'};
+  if (tab === 'inner'){
+    const t = S.ui.inner;
+    const list = t === '__all' ? INNER : [t];
+    return {pages:list.map(coverHTML), land:false, file:'inner-cover' + (t==='__all'?'-all':'') + '.html'};
+  }
+  return buildPrint(S.ui.kind);
+}
+
+/* ---------- preview ---------- */
+function layoutPreview(){
+  const pv = $('#pv'); if (!pv) return;
+  fitAll(pv);
+  const avail = pv.clientWidth - 28;
+  pv.querySelectorAll('.pvbox').forEach(box => {
+    const sh = box.firstElementChild;
+    const w = sh.offsetWidth, h = sh.offsetHeight;
+    const sc = Math.min(1, avail / w);
+    sh.style.transformOrigin = '0 0';
+    sh.style.transform = `scale(${sc})`;
+    box.style.width = (w*sc) + 'px'; box.style.height = (h*sc) + 'px';
+  });
+}
+function updatePreview(){
+  const pv = $('#pv'); if (!pv) return;
+  const r = pagesFor(S.ui.tab);
+  if (r.empty || !r.pages.length){
+    pv.innerHTML = '<div class="pvhint">សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់» សិន។</div>';
+    return;
+  }
+  pv.innerHTML = `<style>${DOC_CSS}</style>` + r.pages.map(p => `<div class="pvbox">${p}</div>`).join('');
+  layoutPreview();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutPreview);
+  const note = $('#logonote');
+  if (note) note.hidden = !!S.s.logo || S.ui.tab === 'print';
+}
+function buildDocument(r, title){
+  return '<!doctype html><html lang="km"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + esc(title) + '</title>' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&family=Noto+Sans+Khmer:wght@400;700&display=swap">' +
+    '<style>@page{size:A4 ' + (r.land ? 'landscape' : 'portrait') + ';margin:0}' + DOC_CSS + PRINT_CSS + '</style></head><body>' +
+    '<div class="bar"><button onclick="window.print()">ព្រីន / រក្សាទុកជា PDF</button><span>ឬចុច Ctrl+P (Mac: ⌘P) ហើយជ្រើស «Margins: None»</span></div>' +
+    r.pages.join('') + '<scr' + 'ipt>' + FIT_JS + 'window.addEventListener("load",function(){var go=function(){setTimeout(function(){window.print()},400)};if(document.fonts&&document.fonts.ready){document.fonts.ready.then(go)}else{go()}});</scr' + 'ipt></body></html>';
+}
+
+/* ---------- PDF ---------- */
+let pdfBusy = false;
+function libsOk(zip){ return !!(window.html2canvas && window.jspdf && window.jspdf.jsPDF && (!zip || window.JSZip)); }
+async function pdfFromResult(r, onPage){
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-20000px;top:0;width:300mm;background:#fff;';
+  host.innerHTML = '<style>' + DOC_CSS + '</style>' + r.pages.join('');
+  document.body.appendChild(host);
+  try{
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    fitAll(host);
+    const sheets = [...host.querySelectorAll('.sheet')];
+    const pw = r.land ? 297 : 210, ph = r.land ? 210 : 297;
+    const pdf = new window.jspdf.jsPDF({orientation: r.land ? 'landscape' : 'portrait', unit:'mm', format:'a4', compress:true});
+    for (let i = 0; i < sheets.length; i++){
+      if (onPage) onPage(i + 1, sheets.length);
+      const cv = await window.html2canvas(sheets[i], {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+      if (i) pdf.addPage('a4', r.land ? 'landscape' : 'portrait');
+      pdf.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
+      cv.width = cv.height = 0;
+    }
+    return pdf.output('arraybuffer');
+  } finally { host.remove(); }
+}
+async function makePdf(btn){
+  if (pdfBusy) return;
+  const r = pagesFor(S.ui.tab);
+  if (r.empty || !r.pages.length){ toast('សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់» សិន។'); return; }
+  if (!DL){ toast('ការរក្សាទុក PDF មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកក្នុង claude.ai។'); return; }
+  if (!libsOk()){ toast('មិនអាចផ្ទុកឧបករណ៍បង្កើត PDF បានទេ។ ពិនិត្យអ៊ីនធឺណិត រួចព្យាយាមម្តងទៀត។'); return; }
+  pdfBusy = true; const label = btn.textContent; btn.disabled = true;
+  try{
+    const buf = await pdfFromResult(r, (i, n) => { btn.textContent = 'កំពុងបង្កើត ' + i + '/' + n + '…'; });
+    await saveFile(r.file.replace(/\.html$/, '.pdf'), buf);
+  }catch(e){ toast('បង្កើត PDF មិនបាន។ សាកល្បងម្តងទៀត។'); }
+  finally{ btn.textContent = label; btn.disabled = false; pdfBusy = false; }
+}
+
+/* ---------- ZIP of everything ---------- */
+const safeName = s => String(s).replace(/[\\/:*?"<>|]+/g, '-').trim();
+function withUi(patch, fn){
+  const old = {kind:S.ui.kind, cls:S.ui.cls, inner:S.ui.inner};
+  Object.assign(S.ui, patch);
+  try{ return fn(); } finally { Object.assign(S.ui, old); }
+}
+function zipJobs(sel){
+  const jobs = [], cl = classes();
+  if (sel.cover) jobs.push({path:'១-ក្របមុខ/ក្របមុខ.pdf', get:() => pagesFor('cover')});
+  if (sel.inner) INNER.forEach((t, i) => jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + '.pdf', get:() => withUi({inner:t}, () => pagesFor('inner'))}));
+  if (sel.print){
+    ['meeting','tech'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k}, () => pagesFor('print'))}));
+    ['extract','absence','scores','slow'].forEach(k => cl.forEach(c => jobs.push({path:'៣-ឯកសារព្រីន/ថ្នាក់ ' + safeName(c) + '/' + safeName(KINDS[k].label) + ' ' + safeName(c) + '.pdf', get:() => withUi({kind:k, cls:c}, () => pagesFor('print'))})));
+  }
+  return jobs;
+}
+const ZSEL = {cover:true, inner:true, print:true};
+async function makeZip(btn){
+  if (pdfBusy) return;
+  if (!DL){ toast('ការរក្សាទុកមិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកក្នុង claude.ai។'); return; }
+  if (!libsOk(true)){ toast('មិនអាចផ្ទុកឧបករណ៍បង្កើត PDF/ZIP បានទេ។ ពិនិត្យអ៊ីនធឺណិត។'); return; }
+  const jobs = zipJobs(ZSEL);
+  if (!jobs.length){ toast('សូមជ្រើសយ៉ាងហោចណាស់មួយផ្នែក។'); return; }
+  pdfBusy = true; btn.disabled = true;
+  const bar = $('#zprog'), label = btn.textContent;
+  try{
+    const zip = new window.JSZip(); let done = 0;
+    for (const job of jobs){
+      const r = job.get();
+      if (!r.pages.length) { done++; continue; }
+      const buf = await pdfFromResult(r, (i, n) => { bar.textContent = 'ឯកសារ ' + (done+1) + '/' + jobs.length + ' · ទំព័រ ' + i + '/' + n + ' · ' + job.path.split('/').pop(); });
+      zip.file(job.path, buf); done++;
+    }
+    bar.textContent = 'កំពុងបង្ហាប់ ZIP…';
+    const blob = await zip.generateAsync({type:'blob', compression:'STORE'});
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    await saveFile('radthabal-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.zip', blob);
+    bar.textContent = 'បានបង្កើត ' + done + ' ឯកសារ PDF ក្នុង ZIP។';
+  }catch(e){ bar.textContent = 'បង្កើត ZIP មិនបាន។ សាកល្បងម្តងទៀត។'; }
+  finally{ btn.disabled = false; btn.textContent = label; pdfBusy = false; }
+}
+function renderAll(){
+  const cl = classes(), n = zipJobs(ZSEL).length;
+  $('#app').innerHTML = `<div class="card" style="max-width:640px"><h2>ទាញយកទាំងអស់ជា ZIP</h2>
+<p class="help" style="margin-top:0">បង្កើត PDF គ្រប់ឯកសារតាមថ្នាក់ដែលបានជ្រើស (${esc(cl.join(', ') || 'មិនទាន់មានថ្នាក់')}) ហើយបញ្ចូលក្នុងឯកសារ ZIP មួយ។</p>
+<div class="chips" style="flex-direction:column;gap:8px;margin:12px 0">
+<label><input type="checkbox" id="zc" ${ZSEL.cover?'checked':''}> ក្របមុខ (១ ឯកសារ)</label>
+<label><input type="checkbox" id="zi" ${ZSEL.inner?'checked':''}> ក្របខាងក្នុង (${INNER.length} ឯកសារ)</label>
+<label><input type="checkbox" id="zp" ${ZSEL.print?'checked':''}> ឯកសារព្រីនការងារ (ប្រជុំ ២ + ៤ ប្រភេទ × ${cl.length} ថ្នាក់)</label></div>
+<button class="btn pri" id="zbtn" data-act="zip">Save all as ZIP (${n} PDF)</button>
+<p class="msg" id="zprog" role="status" style="color:var(--muted)"></p>
+<p class="help">ប្រើពេលប្រហែល ១-៣ នាទី អាស្រ័យលើចំនួនថ្នាក់។ សូមកុំបិទទំព័រ។ PDF ជារូបភាពទំព័រ ដូច្នេះមិនអាចជ្រើសចម្លងអក្សរបាន។</p></div>`;
+}
+
+/* ---------- downloads ---------- */
+let DL = null;
+async function initDownloads(){
+  try{ if (window.claude && window.claude.use) DL = await window.claude.use('downloads'); }catch(e){ DL = null; }
+  document.body.classList.toggle('nodl', !DL);
+}
+async function saveFile(filename, data){
+  if (!DL){ toast('ការទាញយកមិនអាចប្រើបាននៅទីនេះ។ ប្រើប៊ូតុង «ចម្លង HTML» ជំនួស។'); return; }
+  try{ await DL.save({filename, data}); toast('បានរក្សាទុក៖ ' + filename); }
+  catch(e){ if (e && e.code === 'declined') return; toast('រក្សាទុកមិនបាន (' + ((e && e.code) || 'error') + ')'); }
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); toast('បានចម្លង។ បិទភ្ជាប់ក្នុងឯកសារ .html ហើយបើកក្នុងកម្មវិធីរុករក។'); }
+  catch(e){ toast('ចម្លងមិនបាន។'); }
+}
+
+/* ---------- panels ---------- */
+const TABS = [['settings','១. ការកំណត់'],['students','២. បញ្ជីសិស្ស'],['cover','៣. ក្របមុខ'],['inner','៤. ក្របខាងក្នុង'],['print','៥. ព្រីនការងារ'],['all','៦. ទាញយកទាំងអស់']];
+function renderTabs(){
+  $('#tabs').innerHTML = TABS.map(([id,l]) => `<button class="tab" role="tab" data-act="tab" data-tab="${id}" aria-selected="${S.ui.tab===id}">${l}</button>`).join('');
+}
+function field(label, key, ph){
+  return `<div class="field"><label for="f-${key}">${label}</label><input type="text" id="f-${key}" data-set="${key}" value="${esc(S.s[key])}" placeholder="${esc(ph||'')}"></div>`;
+}
+/* ---------- Google Sheet sync ---------- */
+const SHEETSRV = 'Google Sheets';
+const TAB = {students:'ឈ្មោះសិស្ស', classes:'ថ្នាក់', teachers:'ឈ្មោះគ្រូ'};
+let MCP = null, syncing = false, syncNote = {t:'', err:false}, tq = '';
+const zw = s => String(s == null ? '' : s).replace(/​/g, '');
+const cleanName = s => zw(s).replace(/\s+/g, ' ').trim();
+const keyName = s => zw(s).replace(/\s+/g, '');
+const sheetId = () => { const m = /\/d\/([A-Za-z0-9_-]+)/.exec(S.s.sheetUrl || ''); return m ? m[1] : ''; };
+function fixPhone(p){ p = zw(p).replace(/\s+/g, ''); return /^[1-9]\d{7,8}$/.test(p) ? '0' + p : p; }
+function fmtTime(ts){ try{ return new Date(ts).toLocaleString('km-KH', {dateStyle:'medium', timeStyle:'short'}); }catch(e){ return new Date(ts).toLocaleString(); } }
+function totalStudents(){ return Object.values(S.students).reduce((a, l) => a + l.length, 0); }
+function renderSyncbar(){
+  const el = $('#syncbar'); if (!el) return;
+  const info = S.sheet.at
+    ? `ទាញចុងក្រោយ៖ ${fmtTime(S.sheet.at)} · ${S.sheet.teachers.length} គ្រូ · ${S.sheet.classes.length} ថ្នាក់ · ${totalStudents()} សិស្ស`
+    : 'មិនទាន់បានទាញពី Google Sheet។';
+  el.innerHTML = `<button class="btn pri sm" data-act="sync" ${syncing ? 'disabled' : ''}>${syncing ? 'កំពុងទាញ…' : 'ធ្វើបច្ចុប្បន្នភាពពី Google Sheet'}</button><span class="${syncNote.err ? 'msg err' : 'muted'}" style="margin:0">${esc(syncNote.t || info)}</span>`;
+}
+function setSync(t, err){ syncNote = {t, err: !!err}; renderSyncbar(); }
+function errText(e){
+  const c = e && e.code;
+  if (c === 'needs_reauth') return 'ត្រូវភ្ជាប់ Google Sheets ឡើងវិញ៖ claude.ai → Settings → Connectors។';
+  if (c === 'server_not_connected') return 'មិនទាន់ភ្ជាប់ Google Sheets។ បន្ថែមនៅ claude.ai → Settings → Connectors។';
+  if (c === 'selection_required') return 'មាន connector Google Sheets ច្រើន។ សូមជ្រើសមួយ ហើយព្យាយាមម្តងទៀត។';
+  if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') return 'ត្រូវការការអនុញ្ញាត។ ចុចប៊ូតុងទាញម្តងទៀត ហើយជ្រើស Allow។';
+  if (c === 'blocked_by_policy') return 'អង្គការរបស់អ្នកបានហាមប្រាមការប្រើ connector នេះ។';
+  if (c === 'tool_error') return 'Google Sheets រាយការណ៍កំហុស៖ ' + String((e && e.message) || '').slice(0, 140);
+  if (c === 'server_unavailable' || c === 'rate_limited' || c === 'upstream_error') return 'Google Sheets មិនឆ្លើយតបឥឡូវនេះ។ ព្យាយាមម្តងទៀតបន្តិចទៀត។';
+  if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') return 'ទិដ្ឋភាពនេះមិនអនុញ្ញាតការភ្ជាប់ Google Sheets។';
+  return 'ទាញមិនបាន (' + (c || 'error') + ')។';
+}
+async function getRows(range){
+  const r = await MCP.callTool(SHEETSRV, 'get_values', {spreadsheetId: sheetId(), range}, {cache:false});
+  let p = r.payload;
+  if (typeof p === 'string'){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
+  return (p && (p.values || (p.valueRange && p.valueRange.values))) || [];
+}
+async function syncSheet(){
+  if (syncing) return;
+  if (!MCP){ setSync('ការទាញពី Google Sheet មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ ប្រើការបិទភ្ជាប់ក្នុងផ្នែក «បញ្ជីសិស្ស»។', true); return; }
+  if (!sheetId()){ setSync('តំណ Google Sheet មិនត្រឹមត្រូវ។ ពិនិត្យនៅផ្នែក «ការកំណត់»។', true); return; }
+  syncing = true; setSync('កំពុងទាញពី Google Sheet…', false);
+  try{
+    const cls = await getRows(`'${TAB.classes}'!A2:A400`);
+    const [tea, stu] = await Promise.all([getRows(`'${TAB.teachers}'!A2:C600`), getRows(`'${TAB.students}'!A2:D5000`)]);
+    const by = {}; let n = 0;
+    stu.forEach(r => {
+      const name = cleanName(r[1]), c = normCls(zw(r[3] || ''));
+      if (!name || !c) return;
+      (by[c] = by[c] || []).push({name, sex: normSex(zw(r[2]))}); n++;
+    });
+    const teachers = tea.map(r => ({name: cleanName(r[0]), subject: cleanName(r[1]), phone: fixPhone(r[2])})).filter(t => t.name);
+    const list = sortClasses(cls.map(r => normCls(zw(r[0] || ''))).filter(Boolean));
+    S.sheet = {classes: list.length ? list : sortClasses(Object.keys(by)), teachers, at: Date.now()};
+    Object.keys(by).forEach(c => { S.students[c] = by[c]; });
+    const cur = teachers.find(t => keyName(t.name) === keyName(S.s.teacher));
+    if (cur){ S.s.teacher = cur.name; if (cur.subject) S.s.subject = cur.subject; if (cur.phone) S.s.phone = cur.phone; }
+    save();
+    syncing = false;
+    setSync('បានទាញ ' + n + ' សិស្ស, ' + teachers.length + ' គ្រូ, ' + S.sheet.classes.length + ' ថ្នាក់ ពី Google Sheet។', false);
+    RENDER[S.ui.tab]();
+  }catch(e){
+    syncing = false; setSync(errText(e), true);
+  }
+}
+
+/* ---------- teachers ---------- */
+function teacherNames(){
+  const seen = new Set(), out = [];
+  [...S.sheet.teachers.map(t => t.name), ...S.s.teachers, S.s.teacher].forEach(n => { const k = keyName(n); if (n && !seen.has(k)){ seen.add(k); out.push(n); } });
+  return out;
+}
+function fillTeacherOptions(){
+  const sel = $('#teacherSel'); if (!sel) return;
+  const q = keyName(tq);
+  const f = teacherNames().filter(n => !q || keyName(n).includes(q) || n === S.s.teacher);
+  sel.innerHTML = f.map(n => `<option ${n === S.s.teacher ? 'selected' : ''}>${esc(n)}</option>`).join('');
+}
+function pickTeacher(name){
+  S.s.teacher = name;
+  const t = S.sheet.teachers.find(x => keyName(x.name) === keyName(name));
+  if (t){ S.s.subject = t.subject; S.s.phone = t.phone; }
+  save(); renderSettings();
+}
+
+/* ---------- settings + students panels ---------- */
+function renderSettings(){
+  const sel = new Set(S.s.classes);
+  const base = S.sheet.classes.length ? S.sheet.classes : [7,8,9,10,11,12].flatMap(g => 'ABCDEF'.split('').map(l => g + l));
+  const groups = {};
+  base.forEach(c => { const g = parseInt(c) || 0; (groups[g] = groups[g] || []).push(c); });
+  const grid = Object.keys(groups).map(Number).sort((a, b) => a - b).map(g =>
+    `<div class="crow"><span class="g">${g ? 'ថ្នាក់ទី ' + g : 'ផ្សេងៗ'}</span>${groups[g].map(c => { const on = sel.has(c); const n = students(c).length; return `<button type="button" class="chip ${on ? 'on' : ''}" data-act="tc" data-c="${esc(c)}" aria-pressed="${on}" title="${n} នាក់">${esc(c)}</button>`; }).join('')}</div>`).join('');
+  const extra = classes().filter(c => !base.includes(c));
+  const fromSheet = S.sheet.teachers.some(t => keyName(t.name) === keyName(S.s.teacher));
+  const own = S.s.teachers.includes(S.s.teacher) && !fromSheet;
+  $('#app').innerHTML = `<div class="split"><div>
+<div class="card"><h2>ភ្ជាប់ Google Sheet</h2>
+<div class="field"><label for="f-sheetUrl">តំណ Google Sheet</label><input type="text" id="f-sheetUrl" data-set="sheetUrl" value="${esc(S.s.sheetUrl)}"></div>
+<div class="inline"><button class="btn pri" data-act="sync" ${syncing ? 'disabled' : ''}>ទាញទិន្នន័យឥឡូវនេះ</button><a class="btn sm" href="${esc(S.s.sheetUrl)}" target="_blank" rel="noopener" style="text-decoration:none">បើក Sheet</a></div>
+<p class="help">ទាញពី tab «ឈ្មោះសិស្ស» (ល.រ, ឈ្មោះ, ភេទ, ថ្នាក់), «ថ្នាក់» និង «ឈ្មោះគ្រូ» (ឈ្មោះ, មុខវិជ្ជា, លេខទូរស័ព្ទ)។ App ទាញស្វ័យប្រវត្តិរាល់ពេលបើក។</p></div>
+<div class="card"><h2>ព័ត៌មានសាលា</h2>
+${field('មន្ទីរអប់រំ យុវជន និងកីឡា', 'department')}
+${field('ការិយាល័យអប់រំ យុវជន និងកីឡា', 'office')}
+${field('ឈ្មោះសាលា', 'school')}
+${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២៧')}
+<div class="lbl">ឡូហ្គោក្រសួង (បង្ហាញលើក្របមុខ)</div>
+<div class="logo-row">${S.s.logo ? `<img src="${S.s.logo}" alt="ឡូហ្គោ">` : '<div class="logo-ph">គ្មាន</div>'}
+<input type="file" id="logoFile" accept="image/*" hidden><button class="btn sm" data-act="logo">ជ្រើសរូបភាព</button>${S.s.logo ? '<button class="btn sm danger" data-act="logoOff">លុប</button>' : ''}</div>
+</div>
+<div class="card"><h2>បម្រុងទុកទិន្នន័យ</h2>
+<p class="help" style="margin-top:0">ការកំណត់រក្សាទុកក្នុងកម្មវិធីរុករកនេះ។ ទាញយកឯកសារបម្រុងទុក ដើម្បីប្តូរឧបករណ៍។</p>
+<div class="inline" style="margin-top:10px"><button class="btn" data-act="export">ទាញយកបម្រុងទុក (.json)</button><input type="file" id="importFile" accept=".json,application/json" hidden><button class="btn" data-act="import">ស្តារពីឯកសារ</button></div></div>
+</div><div>
+<div class="card"><h2>គ្រូបង្រៀន</h2>
+<div class="field"><label for="tq">ស្វែងរកឈ្មោះគ្រូ</label><input type="text" id="tq" value="${esc(tq)}" placeholder="វាយឈ្មោះ…" autocomplete="off"></div>
+<div class="field"><label for="teacherSel">ជ្រើសឈ្មោះគ្រូ (${teacherNames().length} នាក់)</label><select id="teacherSel" data-act-change="teacher"></select></div>
+${field('មុខវិជ្ជាបង្រៀន', 'subject')}
+<div class="field"><label for="f-phone">លេខទូរស័ព្ទ</label><input type="tel" id="f-phone" data-set="phone" value="${esc(S.s.phone)}"></div>
+<p class="help" style="margin-top:0">${fromSheet ? 'មុខវិជ្ជា និងលេខទូរស័ព្ទទាញពី Google Sheet ពេលជ្រើសគ្រូ។ កែបានដោយដៃ ប៉ុន្តែការទាញបន្ទាប់នឹងជំនួស។' : 'គ្រូនេះមិនមានក្នុង Google Sheet ទេ។ បំពេញមុខវិជ្ជានិងលេខទូរស័ព្ទដោយដៃ។'}</p>
+<details><summary class="help" style="cursor:pointer">បន្ថែមគ្រូដោយដៃ</summary>
+<div class="inline" style="margin-top:8px"><input type="text" id="newTeacher" placeholder="ឈ្មោះគ្រូថ្មី" aria-label="ឈ្មោះគ្រូថ្មី"><button class="btn" data-act="addTeacher">បន្ថែម</button>${own ? '<button class="btn danger" data-act="delTeacher">លុប</button>' : ''}</div></details>
+</div>
+<div class="card"><h2>ជ្រើសថ្នាក់ដែលបង្រៀន</h2><div class="cgrid">${grid}</div>
+<div class="inline" style="margin-top:12px"><input type="text" id="newClass" placeholder="ថ្នាក់ផ្សេង (ឧ. 9G)" aria-label="ថ្នាក់ផ្សេង"><button class="btn" data-act="addClass">បន្ថែម</button></div>
+${extra.length ? `<div class="chips" style="margin-top:10px">${extra.map(c => `<button class="chip on x" data-act="tc" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+<p class="help">បានជ្រើស៖ <b>${esc(classes().join(', ') || 'មិនទាន់មាន')}</b> · សិស្សនឹងទាញតាមថ្នាក់ដែលបានជ្រើស។</p></div>
+</div></div>`;
+  fillTeacherOptions();
+}
+function renderStudents(){
+  const cl = classes();
+  if (!cl.includes(S.ui.target)) S.ui.target = cl[0] || '';
+  const rost = cl.length ? cl.map(c => {
+    const l = students(c);
+    return `<div class="rost"><header><span>ថ្នាក់ ${esc(c)} · ${l.length} នាក់</span></header>${l.length ? `<ol>${l.map(s => `<li>${esc(s.name)}${s.sex ? `<span>${esc(s.sex)}</span>` : ''}</li>`).join('')}</ol>` : '<p>មិនមានឈ្មោះសិស្សសម្រាប់ថ្នាក់នេះ</p>'}</div>`;
+  }).join('') : '<p class="help">សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់» សិន។</p>';
+  $('#app').innerHTML = `<div class="card"><h2>សិស្សតាមថ្នាក់ដែលបានជ្រើស</h2>
+<p class="help" style="margin-top:0">ទាញពី Google Sheet ស្វ័យប្រវត្តិ។ ${S.sheet.at ? 'ចុងក្រោយ៖ ' + esc(fmtTime(S.sheet.at)) + '។' : 'មិនទាន់បានទាញ។ ចុចប៊ូតុងខាងលើ។'} ប្តូរថ្នាក់នៅផ្នែក «ការកំណត់»។</p>
+<div class="roster">${rost}</div></div>
+<details class="card" style="margin-top:16px"><summary style="cursor:pointer;font-weight:700">បិទភ្ជាប់ឈ្មោះដោយដៃ (បម្រុង)</summary>
+<div style="margin-top:12px">
+<div class="field"><label for="target">ថ្នាក់ (ប្រើពេលទិន្នន័យគ្មានជួរ «ថ្នាក់»)</label><select id="target" data-ui="target">${cl.map(c => `<option ${c === S.ui.target ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+<div class="field"><label for="paste">ទិន្នន័យចម្លងពី Sheet</label><textarea id="paste" placeholder="ល.រ&#9;ឈ្មោះ&#9;ភេទ&#9;ថ្នាក់"></textarea></div>
+<div class="inline"><button class="btn pri" data-act="import-paste">នាំចូល</button><input type="file" id="csvFile" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden><button class="btn" data-act="csv">ឬជ្រើសឯកសារ CSV</button></div>
+<div id="impmsg" class="msg" role="status"></div></div></details>`;
+}
+function renderCover(){
+  $('#app').innerHTML = `<div class="split"><div class="card"><h2>ក្របមុខ</h2>
+<p class="help" style="margin-top:0">ព័ត៌មានទាញពីផ្នែក «ការកំណត់»។ ប្តូរនៅទីនោះ ការមើលជាមុនធ្វើបច្ចុប្បន្នភាពភ្លាមៗ។</p>
+<div class="inline" style="margin-top:12px"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button></div>
+<p class="help" id="logonote" hidden>ឡូហ្គោក្រសួងមិនទាន់មានទេ។ បន្ថែមនៅផ្នែក «ការកំណត់»។</p>
+<p class="help">ចុច «Save as PDF» ដើម្បីរក្សាទុកជាឯកសារ .pdf រួចព្យាយាមព្រីនពី PDF នោះ។</p></div>
+<div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
+  updatePreview();
+}
+function renderInner(){
+  $('#app').innerHTML = `<div class="split"><div class="card"><h2>ក្របខាងក្នុង</h2>
+<div class="field"><label for="innerSel">ជ្រើសប្រភេទ</label><select id="innerSel" data-ui="inner">${INNER.map(t=>`<option ${t===S.ui.inner?'selected':''}>${t}</option>`).join('')}<option value="__all" ${S.ui.inner==='__all'?'selected':''}>ទាំងអស់ (${INNER.length} ទំព័រ)</option></select></div>
+<div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button></div>
+<p class="help" id="logonote" hidden>ឡូហ្គោក្រសួងមិនទាន់មានទេ។ បន្ថែមនៅផ្នែក «ការកំណត់»។</p></div>
+<div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
+  updatePreview();
+}
+function renderPrint(){
+  const k = KINDS[S.ui.kind];
+  const cl = classes();
+  if (S.ui.cls !== 'all' && !cl.includes(S.ui.cls)) S.ui.cls = 'all';
+  $('#app').innerHTML = `<div class="split"><div class="card"><h2>ព្រីនការងារផ្សេងៗ</h2>
+<div class="field"><label for="kindSel">ឯកសារ</label><select id="kindSel" data-ui="kind">${Object.entries(KINDS).map(([id,v])=>`<option value="${id}" ${id===S.ui.kind?'selected':''}>${v.label}</option>`).join('')}</select></div>
+${k.byClass?`<div class="field"><label for="clsSel">ថ្នាក់ (ឈ្មោះសិស្សទាញពីបញ្ជីថ្នាក់)</label><select id="clsSel" data-ui="cls"><option value="all" ${S.ui.cls==='all'?'selected':''}>ទាំងអស់ (${cl.length} ថ្នាក់)</option>${cl.map(c=>`<option ${c===S.ui.cls?'selected':''}>${esc(c)}</option>`).join('')}</select></div>`:''}
+${(S.ui.kind==='absence'||S.ui.kind==='scores')?`<div class="field"><label for="mlist">ខែ/ជួរ (បំបែកដោយក្បៀស ប្តូរបាន)</label><input type="text" id="mlist" data-mlist="${S.ui.kind}" value="${esc((S.ui.monthsBy&&S.ui.monthsBy[S.ui.kind]!=null)?S.ui.monthsBy[S.ui.kind]:DEF_MONTHS[S.ui.kind])}"><p class="help">ឧ. ១១, ១២, ១, ២ ។ ${S.ui.kind==='absence'?'ជួរ «សរុប» ត្រូវបានបន្ថែមស្វ័យប្រវត្តិ។ ':''}អតិបរមា ១៤។ <button type="button" class="btn sm" data-act="mreset">កំណត់ដើម</button></p></div>`:''}
+${k.monthly?`<div class="field"><label for="month">ខែ (ទុកទទេ ដើម្បីសរសេរដោយដៃ)</label><input type="text" id="month" data-ui="month" value="${esc(S.ui.month)}"></div>`:''}
+<div class="field"><label for="ttl">ចំណងជើងឯកសារ (កែបាន)</label><input type="text" id="ttl" data-title="${S.ui.kind}" value="${esc(titleOf(S.ui.kind))}"></div>
+<div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button></div>
+<p class="help">ចុច «Save as PDF» ដើម្បីរក្សាទុកជាឯកសារ .pdf រួចព្យាយាមព្រីនពី PDF នោះ។</p></div>
+<div><div class="pvhead"><h2>មើលជាមុន</h2></div><div class="pv" id="pv"></div></div></div>`;
+  updatePreview();
+}
+const RENDER = {all:renderAll, settings:renderSettings, students:renderStudents, cover:renderCover, inner:renderInner, print:renderPrint};
+function show(tab){ S.ui.tab = tab; save(); renderTabs(); RENDER[tab](); renderSyncbar(); document.body.classList.toggle('nodl', !DL); document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL); window.scrollTo({top:0}); }
+
+/* ---------- events ---------- */
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
+  if (t.dataset.set){ S.s[t.dataset.set] = t.value; save(); if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
+  else if (t.dataset.mlist){ S.ui.monthsBy = S.ui.monthsBy || {}; S.ui.monthsBy[t.dataset.mlist] = t.value; save(); updatePreview(); }
+  else if (t.dataset.title){ S.ui.titles[t.dataset.title] = t.value; save(); updatePreview(); }
+  else if (t.dataset.ui === 'month'){ S.ui.month = t.value; save(); updatePreview(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'zc' || t.id === 'zi' || t.id === 'zp'){ ZSEL[{zc:'cover',zi:'inner',zp:'print'}[t.id]] = t.checked; const b = $('#zbtn'); if (b) b.textContent = 'Save all as ZIP (' + zipJobs(ZSEL).length + ' PDF)'; return; }
+  if (t.dataset.actChange === 'teacher') pickTeacher(t.value);
+  else if (t.dataset.ui && t.dataset.ui !== 'month'){
+    S.ui[t.dataset.ui] = t.value; save();
+    if (t.dataset.ui === 'kind') renderPrint(); else updatePreview();
+  }
+  else if (t.id === 'logoFile' && t.files[0]) readLogo(t.files[0]);
+  else if (t.id === 'importFile' && t.files[0]) importBackup(t.files[0]);
+  else if (t.id === 'csvFile' && t.files[0]) t.files[0].text().then(tx => { $('#paste').value = tx; doImport(tx); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.id === 'newTeacher') addTeacher();
+  else if (e.target.id === 'newClass') addClass();
+});
+function addTeacher(){
+  const el = $('#newTeacher'); const n = el.value.trim(); if (!n) return;
+  if (!S.s.teachers.includes(n)) S.s.teachers.push(n);
+  pickTeacher(n);
+}
+function addClass(){
+  const el = $('#newClass'); const c = normCls(el.value); if (!c) return;
+  if (!S.s.classes.includes(c)) S.s.classes.push(c);
+  save(); renderSettings();
+}
+function readLogo(file){
+  const fr = new FileReader();
+  fr.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const m = 360, sc = Math.min(1, m / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width*sc); c.height = Math.round(img.height*sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      S.s.logo = c.toDataURL('image/png'); save(); renderSettings(); toast('បានបន្ថែមឡូហ្គោ');
+    };
+    img.onerror = () => toast('អានរូបភាពមិនបាន');
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+function doImport(text){
+  const msg = $('#impmsg');
+  const r = parseRoster(text, S.ui.target || classes()[0] || '');
+  if (!r.total){ msg.className = 'msg err'; msg.textContent = 'រកមិនឃើញឈ្មោះសិស្សទេ។ សូមពិនិត្យទិន្នន័យដែលបិទភ្ជាប់។'; return; }
+  const found = Object.keys(r.byClass).filter(Boolean);
+  found.forEach(c => { S.students[c] = r.byClass[c]; if (!S.s.classes.includes(c)) S.s.classes.push(c); });
+  save();
+  const detail = found.map(c => c + ': ' + r.byClass[c].length).join(' · ');
+  renderStudents();
+  const m2 = $('#impmsg'); m2.className = 'msg'; m2.textContent = 'បាននាំចូល ' + r.total + ' នាក់ (' + detail + ')';
+}
+function importBackup(file){
+  file.text().then(tx => {
+    try{
+      const p = JSON.parse(tx);
+      if (!p || !p.s || !p.students) throw new Error('bad');
+      S = {s:{...DEFAULT.s,...p.s}, students:p.students, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...(p.ui||{}), tab:'settings'}};
+      save(); show('settings'); toast('បានស្តារទិន្នន័យ');
+    }catch(err){ toast('ឯកសារបម្រុងទុកមិនត្រឹមត្រូវ'); }
+  });
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'tab') show(b.dataset.tab);
+  else if (a === 'tc'){
+    const c = b.dataset.c, i = S.s.classes.indexOf(c);
+    if (i >= 0) S.s.classes.splice(i, 1); else S.s.classes.push(c);
+    save(); renderSettings();
+  }
+  else if (a === 'sync') syncSheet();
+  else if (a === 'pdf') makePdf(b);
+  else if (a === 'zip') makeZip(b);
+  else if (a === 'mreset'){ if (S.ui.monthsBy) delete S.ui.monthsBy[S.ui.kind]; save(); renderPrint(); }
+  else if (a === 'addTeacher') addTeacher();
+  else if (a === 'delTeacher'){
+    S.s.teachers = S.s.teachers.filter(t => t !== S.s.teacher); S.s.teacher = S.s.teachers[0] || (S.sheet.teachers[0]||{}).name || ''; save(); renderSettings();
+  }
+  else if (a === 'addClass') addClass();
+  else if (a === 'logo') $('#logoFile').click();
+  else if (a === 'logoOff'){ S.s.logo = ''; save(); renderSettings(); }
+  else if (a === 'csv') $('#csvFile').click();
+  else if (a === 'import-paste') doImport($('#paste').value);
+  else if (a === 'clr'){ delete S.students[b.dataset.c]; save(); renderStudents(); }
+  else if (a === 'export') saveFile('sovphov-radthabal-backup.json', JSON.stringify({s:S.s, students:S.students, sheet:S.sheet, ui:S.ui}));
+  else if (a === 'import') $('#importFile').click();
+  else if (a === 'dl' || a === 'copy'){
+    const r = pagesFor(S.ui.tab);
+    if (r.empty || !r.pages.length){ toast('សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់» សិន។'); return; }
+    const html = buildDocument(r, document.title);
+    if (a === 'copy') copyText(html); else saveFile(r.file, html);
+  }
+});
+window.addEventListener('resize', () => layoutPreview());
+if (window.ResizeObserver) new ResizeObserver(() => layoutPreview()).observe(document.body);
+
+renderTabs();
+show(S.ui.tab in RENDER ? S.ui.tab : 'settings');
+initDownloads().then(() => document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL));
+(async () => {
+  try{ if (window.claude && window.claude.use) MCP = await window.claude.use('mcp'); }catch(e){ MCP = null; }
+  renderSyncbar();
+  if (MCP) syncSheet(); else setSync('ការទាញពី Google Sheet មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកទំព័រក្នុង claude.ai។', true);
+})();
+</script>
+
+</body>
+</html>
