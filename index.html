@@ -451,7 +451,6 @@ async function makePdf(btn){
   if (pdfBusy) return;
   const r = pagesFor(S.ui.tab);
   if (r.empty || !r.pages.length){ toast('សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់» សិន។'); return; }
-  if (!DL){ toast('ការរក្សាទុក PDF មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកក្នុង claude.ai។'); return; }
   if (!libsOk()){ toast('មិនអាចផ្ទុកឧបករណ៍បង្កើត PDF បានទេ។ ពិនិត្យអ៊ីនធឺណិត រួចព្យាយាមម្តងទៀត។'); return; }
   pdfBusy = true; const label = btn.textContent; btn.disabled = true;
   try{
@@ -481,7 +480,6 @@ function zipJobs(sel){
 const ZSEL = {cover:true, inner:true, print:true};
 async function makeZip(btn){
   if (pdfBusy) return;
-  if (!DL){ toast('ការរក្សាទុកមិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកក្នុង claude.ai។'); return; }
   if (!libsOk(true)){ toast('មិនអាចផ្ទុកឧបករណ៍បង្កើត PDF/ZIP បានទេ។ ពិនិត្យអ៊ីនធឺណិត។'); return; }
   const jobs = zipJobs(ZSEL);
   if (!jobs.length){ toast('សូមជ្រើសយ៉ាងហោចណាស់មួយផ្នែក។'); return; }
@@ -523,7 +521,17 @@ async function initDownloads(){
   document.body.classList.toggle('nodl', !DL);
 }
 async function saveFile(filename, data){
-  if (!DL){ toast('ការទាញយកមិនអាចប្រើបាននៅទីនេះ។ ប្រើប៊ូតុង «ចម្លង HTML» ជំនួស។'); return; }
+  if (!DL){
+    // outside claude.ai: normal browser download
+    try{
+      const blob = data instanceof Blob ? data : new Blob([data], {type: /\.pdf$/.test(filename) ? 'application/pdf' : /\.zip$/.test(filename) ? 'application/zip' : 'application/octet-stream'});
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      toast('កំពុងទាញយក៖ ' + filename);
+    }catch(e){ toast('រក្សាទុកមិនបាន។'); }
+    return;
+  }
   try{ await DL.save({filename, data}); toast('បានរក្សាទុក៖ ' + filename); }
   catch(e){ if (e && e.code === 'declined') return; toast('រក្សាទុកមិនបាន (' + ((e && e.code) || 'error') + ')'); }
 }
@@ -561,6 +569,8 @@ function renderSyncbar(){
 function setSync(t, err){ syncNote = {t, err: !!err}; renderSyncbar(); }
 function errText(e){
   const c = e && e.code;
+  if (c === 'sheet_private') return 'អានមិនបាន។ ត្រូវចែករំលែក Google Sheet ជា «អ្នកដែលមានតំណអាចមើលបាន» (Anyone with the link: Viewer)។';
+  if (e && e.name === 'TypeError') return 'ទាញមិនបាន។ ពិនិត្យអ៊ីនធឺណិត និងថា Google Sheet ត្រូវបានចែករំលែកជា «អ្នកដែលមានតំណអាចមើលបាន»។';
   if (c === 'needs_reauth') return 'ត្រូវភ្ជាប់ Google Sheets ឡើងវិញ៖ claude.ai → Settings → Connectors។';
   if (c === 'server_not_connected') return 'មិនទាន់ភ្ជាប់ Google Sheets។ បន្ថែមនៅ claude.ai → Settings → Connectors។';
   if (c === 'selection_required') return 'មាន connector Google Sheets ច្រើន។ សូមជ្រើសមួយ ហើយព្យាយាមម្តងទៀត។';
@@ -571,7 +581,21 @@ function errText(e){
   if (c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') return 'ទិដ្ឋភាពនេះមិនអនុញ្ញាតការភ្ជាប់ Google Sheets។';
   return 'ទាញមិនបាន (' + (c || 'error') + ')។';
 }
+const HEADERS = new Set(['ថ្នាក់','Class','ឈ្មោះ','ឈ្មោះសិស្ស','លរ','ល.រ']);
+async function getRowsCsv(range){
+  // outside claude.ai: read the sheet's public CSV export (sheet must be shared "anyone with the link can view")
+  const m = /^'(.+)'!/.exec(range); const tab = m ? m[1] : '';
+  const url = 'https://docs.google.com/spreadsheets/d/' + sheetId() + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(tab);
+  const res = await fetch(url);
+  if (!res.ok){ const e = new Error('http ' + res.status); e.code = 'sheet_private'; throw e; }
+  const text = await res.text();
+  if (/^\s*</.test(text)){ const e = new Error('html'); e.code = 'sheet_private'; throw e; }
+  const rows = parseDelimited(text, ',');
+  if (rows.length && HEADERS.has(zw(rows[0][0]).trim()) || rows.length && HEADERS.has(zw(rows[0][1] || '').trim())) rows.shift();
+  return rows;
+}
 async function getRows(range){
+  if (!MCP) return getRowsCsv(range);
   const r = await MCP.callTool(SHEETSRV, 'get_values', {spreadsheetId: sheetId(), range}, {cache:false});
   let p = r.payload;
   if (typeof p === 'string'){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
@@ -579,7 +603,6 @@ async function getRows(range){
 }
 async function syncSheet(){
   if (syncing) return;
-  if (!MCP){ setSync('ការទាញពី Google Sheet មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ ប្រើការបិទភ្ជាប់ក្នុងផ្នែក «បញ្ជីសិស្ស»។', true); return; }
   if (!sheetId()){ setSync('តំណ Google Sheet មិនត្រឹមត្រូវ។ ពិនិត្យនៅផ្នែក «ការកំណត់»។', true); return; }
   syncing = true; setSync('កំពុងទាញពី Google Sheet…', false);
   try{
@@ -835,7 +858,7 @@ initDownloads().then(() => document.querySelectorAll('.nodl-only').forEach(b => 
 (async () => {
   try{ if (window.claude && window.claude.use) MCP = await window.claude.use('mcp'); }catch(e){ MCP = null; }
   renderSyncbar();
-  if (MCP) syncSheet(); else setSync('ការទាញពី Google Sheet មិនអាចប្រើបាននៅទិដ្ឋភាពនេះ។ បើកទំព័រក្នុង claude.ai។', true);
+  syncSheet();
 })();
 </script>
 
