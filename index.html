@@ -238,12 +238,13 @@ const DOC_CSS = `
 .cv .cv-t1{color:#e5121b;font-size:36pt;line-height:1.7}
 .cv .cv-t2{color:#a31212;font-size:30pt;line-height:1.7}
 .cv .cv-name{color:#e11fd0;font-size:22pt;line-height:1.7}
-.cv .cv-orn{display:block;width:100%;height:5mm}
-.cv .cv-info{display:flex;flex-direction:column;gap:1mm;border-top:.45mm solid #0a2561;border-bottom:.45mm solid #0a2561;padding:3.5mm 0}
+.cv .cv-orn{display:block;width:100%;height:5mm;margin-top:1mm}
+.cv .cv-info{display:flex;flex-direction:column;gap:1mm}
+.cv .cv-bot{padding-bottom:7mm}
 .cv .cv-info>.fit{min-width:0}
 .cv .cv-sub{color:#08c9ad;font-size:22pt;line-height:1.7}
 .cv .cv-cls{color:#3b5bff;font-size:18pt;line-height:1.7}
-.cv .cv-tel{color:#0f7c7c;font-size:19pt;line-height:1.7;border-top:.3mm solid #c9a227;padding-top:3mm}
+.cv .cv-tel{color:#0f7c7c;font-size:19pt;line-height:1.7}
 .cv .cv-foot{position:absolute;left:3mm;right:3mm;bottom:3mm;height:27mm;background:#0a2561;color:#fff;display:flex;align-items:center;padding:0 8mm}
 .cv .cv-foot .fit{font-size:28pt;line-height:1.7}
 .pg{position:absolute;inset:0;padding:13mm 15mm 12mm;display:flex;flex-direction:column}
@@ -292,15 +293,13 @@ function coverHTML(innerTitle, one){
 <div class="cv-head"><div class="cv-k1">ព្រះរាជាណាចក្រកម្ពុជា</div><div class="cv-k2">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>${logo}<div class="cv-min">${MINISTRY}</div>
 <svg class="cv-wave" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0 20V9C22 22 52 -3 100 11V20Z" fill="#ffffff"/></svg></div>
 <div class="cv-body">
- <div><div class="cv-dep fit">${esc(s.department)}</div><div class="cv-off fit">${esc(s.office)}</div></div>
+ <div><div class="cv-dep fit">${esc(s.department)}</div><div class="cv-off fit">${esc(s.office)}</div><svg class="cv-orn" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="og"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9a227"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="0" y="2.6" width="44" height=".8" fill="url(#og)"/><rect x="56" y="2.6" width="44" height=".8" fill="url(#og)"/><path d="M50 .4 53 3 50 5.6 47 3Z" fill="#c9a227"/></svg></div>
  <div><div class="cv-sch fit">${esc(s.school)}</div><div class="cv-book">សៀវភៅ</div>${mid}
-  <svg class="cv-orn" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="og"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#c9a227"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="0" y="2.6" width="44" height=".8" fill="url(#og)"/><rect x="56" y="2.6" width="44" height=".8" fill="url(#og)"/><path d="M50 .4 53 3 50 5.6 47 3Z" fill="#c9a227"/></svg>
   <div class="cv-info">
-   <div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div>
    <div class="cv-sub fit">មុខវិជ្ជា៖ ${esc(s.subject)}</div>
    <div class="cv-cls fit">${one ? 'ថ្នាក់ទី ' + esc(one) : 'បង្រៀនថ្នាក់ទី ' + esc(classes().join(','))}</div>
   </div></div>
- <div><div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div></div>
+ <div class="cv-bot"><div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div><div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div></div>
 </div>
 <div class="cv-foot"><div class="fit">ឆ្នាំសិក្សា ${esc(s.year)}</div></div>
 </section>`;
