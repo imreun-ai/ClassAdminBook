@@ -35,6 +35,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .tab:hover:not([aria-selected="true"]){background:var(--soft);color:var(--fg)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{max-width:1240px;margin:18px auto 0}
+.tres{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;max-height:260px;overflow-y:auto}
+.tres-item{display:flex;justify-content:space-between;gap:10px;align-items:center;font:inherit;text-align:left;background:var(--surface);color:var(--fg);border:0;border-bottom:1px solid var(--line);padding:8px 12px;cursor:pointer}
+.tres-item:last-child{border-bottom:0}
+.tres-item:hover{background:var(--soft)}
+.tres-item small{color:var(--muted)}
 .muted{color:var(--muted);font-size:13px}
 .syncwrap{max-width:1240px;margin:12px auto 0}
 .syncbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
@@ -649,10 +654,17 @@ function teacherNames(){
   return out;
 }
 function fillTeacherOptions(){
-  const sel = $('#teacherSel'); if (!sel) return;
+  const sel = $('#teacherSel');
+  if (sel) sel.innerHTML = teacherNames().map(n => `<option ${n === S.s.teacher ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  const box = $('#tres'); if (!box) return;
   const q = keyName(tq);
-  const f = teacherNames().filter(n => !q || keyName(n).includes(q) || n === S.s.teacher);
-  sel.innerHTML = f.map(n => `<option ${n === S.s.teacher ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  if (!q){ box.hidden = true; box.innerHTML = ''; return; }
+  const subj = n => (S.sheet.teachers.find(t => keyName(t.name) === keyName(n)) || {}).subject || '';
+  const f = teacherNames().filter(n => keyName(n).includes(q) || keyName(subj(n)).includes(q)).slice(0, 10);
+  box.hidden = false;
+  box.innerHTML = f.length
+    ? f.map(n => `<button type="button" class="tres-item" data-act="pickT" data-n="${esc(n)}"><span>${esc(n)}</span><small>${esc(subj(n))}</small></button>`).join('')
+    : '<div class="help" style="margin:6px 0">រកមិនឃើញឈ្មោះ។ ទាញពី Google Sheet ឬបន្ថែមដោយដៃ។</div>';
 }
 function pickTeacher(name){
   S.s.teacher = name;
@@ -688,7 +700,7 @@ ${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២�
 <div class="inline" style="margin-top:10px"><button class="btn" data-act="export">ទាញយកបម្រុងទុក (.json)</button><input type="file" id="importFile" accept=".json,application/json" hidden><button class="btn" data-act="import">ស្តារពីឯកសារ</button></div></div>
 </div><div>
 <div class="card"><h2>គ្រូបង្រៀន</h2>
-<div class="field"><label for="tq">ស្វែងរកឈ្មោះគ្រូ</label><input type="text" id="tq" value="${esc(tq)}" placeholder="វាយឈ្មោះ…" autocomplete="off"></div>
+<div class="field"><label for="tq">ស្វែងរកឈ្មោះគ្រូ</label><input type="text" id="tq" value="${esc(tq)}" placeholder="វាយឈ្មោះ…" autocomplete="off"><div id="tres" class="tres" hidden></div></div>
 <div class="field"><label for="teacherSel">ជ្រើសឈ្មោះគ្រូ (${teacherNames().length} នាក់)</label><select id="teacherSel" data-act-change="teacher"></select></div>
 ${field('មុខវិជ្ជាបង្រៀន', 'subject')}
 <div class="field"><label for="f-phone">លេខទូរស័ព្ទ</label><input type="tel" id="f-phone" data-set="phone" value="${esc(S.s.phone)}"></div>
@@ -840,6 +852,7 @@ document.addEventListener('click', async e => {
     save(); renderSettings();
   }
   else if (a === 'sync') syncSheet();
+  else if (a === 'pickT'){ tq = ''; pickTeacher(b.dataset.n); }
   else if (a === 'pdf') makePdf(b);
   else if (a === 'zip') makeZip(b);
   else if (a === 'mreset'){ if (S.ui.monthsBy) delete S.ui.monthsBy[S.ui.kind]; save(); renderPrint(); }
