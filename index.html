@@ -229,22 +229,22 @@ const DOC_CSS = `
 .cv .cv-logo{position:absolute;left:19mm;top:15mm;width:22mm;height:23mm;object-fit:contain}
 .cv .cv-min{position:absolute;left:3mm;bottom:12mm;font-size:11pt;line-height:1.7;white-space:nowrap}
 .cv .cv-wave{position:absolute;left:0;bottom:-.3mm;width:100%;height:11mm;display:block}
-.cv .cv-body{position:absolute;left:33mm;right:7mm;top:65mm;bottom:31mm;display:flex;flex-direction:column;justify-content:space-between}
+.cv .cv-body{position:absolute;left:33mm;right:7mm;top:65mm;bottom:34mm;display:flex;flex-direction:column;justify-content:space-between}
 .cv .cv-body>div{display:flex;flex-direction:column;gap:3.5mm;min-width:0}
+.cv .cv-body>div:nth-child(2){margin:auto 0}
 .cv .cv-dep{color:#5f8a2a;font-size:12pt;line-height:1.7;text-align:left}
 .cv .cv-off{color:#1a3bc4;font-size:12pt;line-height:1.7;text-align:left}
 .cv .cv-sch{color:#0d2a6b;font-size:26pt;line-height:1.7}
 .cv .cv-book{color:#6b2c91;font-size:20pt;line-height:1.7;text-align:center}
 .cv .cv-t1{color:#e5121b;font-size:36pt;line-height:1.7}
 .cv .cv-t2{color:#a31212;font-size:30pt;line-height:1.7}
-.cv .cv-name{color:#e11fd0;font-size:22pt;line-height:1.7}
+.cv .cv-name{color:#e11fd0;font-size:20pt;line-height:1.7}
 .cv .cv-orn{display:block;width:100%;height:5mm;margin-top:1mm}
-.cv .cv-info{display:flex;flex-direction:column;gap:1mm}
-.cv .cv-bot{padding-bottom:7mm}
+.cv .cv-info{display:flex;flex-direction:column;gap:2mm}
 .cv .cv-info>.fit{min-width:0}
-.cv .cv-sub{color:#08c9ad;font-size:22pt;line-height:1.7}
-.cv .cv-cls{color:#3b5bff;font-size:18pt;line-height:1.7}
-.cv .cv-tel{color:#0f7c7c;font-size:19pt;line-height:1.7}
+.cv .cv-sub{color:#08c9ad;font-size:20pt;line-height:1.7}
+.cv .cv-cls{color:#3b5bff;font-size:20pt;line-height:1.7}
+.cv .cv-tel{color:#0f7c7c;font-size:20pt;line-height:1.7}
 .cv .cv-foot{position:absolute;left:3mm;right:3mm;bottom:3mm;height:27mm;background:#0a2561;color:#fff;display:flex;align-items:center;padding:0 8mm}
 .cv .cv-foot .fit{font-size:28pt;line-height:1.7}
 .pg{position:absolute;inset:0;padding:13mm 15mm 12mm;display:flex;flex-direction:column}
@@ -298,8 +298,9 @@ function coverHTML(innerTitle, one){
   <div class="cv-info">
    <div class="cv-sub fit">មុខវិជ្ជា៖ ${esc(s.subject)}</div>
    <div class="cv-cls fit">${one ? 'ថ្នាក់ទី ' + esc(one) : 'បង្រៀនថ្នាក់ទី ' + esc(classes().join(','))}</div>
+   <div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div>
+   <div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div>
   </div></div>
- <div class="cv-bot"><div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div><div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div></div>
 </div>
 <div class="cv-foot"><div class="fit">ឆ្នាំសិក្សា ${esc(s.year)}</div></div>
 </section>`;
