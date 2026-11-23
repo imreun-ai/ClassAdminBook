@@ -202,7 +202,7 @@ function sortClasses(a){
 /* ---------- state ---------- */
 const KEY = 'sovphov-radthabal-v1';
 const DEFAULT = {
-  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
+  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', homeroom:'', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
   students:{}, sheet:{classes:[],teachers:[],at:0},
   ui:{tab:'settings', inner:'ប្រជុំការងារផ្សេងៗ', kind:'meeting', cls:'all', month:'', titles:{}, target:''}
 };
@@ -278,7 +278,7 @@ const FIT_JS = 'var fitAll='+fitAll.toString()+';fitAll(document);if(document.fo
 
 /* ---------- covers ---------- */
 const SINGLE = new Set(['ផែនការសិស្ស','ផែនការបន្ទុកថ្នាក់','ក្រុមប្រឹក្សាថ្នាក់']);
-function innerCls(){ const c = classes(); return c.includes(S.ui.innerCls) ? S.ui.innerCls : (c[0] || ''); }
+function innerCls(){ const c = classes(); return c.includes(S.s.homeroom) ? S.s.homeroom : (c[0] || ''); }
 function coverHTML(innerTitle, one){
   const s = S.s;
   const mid = innerTitle ? `<div class="cv-t2 fit">${esc(innerTitle)}</div>` : `<div class="cv-t1 fit">រដ្ឋបាលថ្នាក់</div>`;
@@ -473,8 +473,8 @@ function zipJobs(sel){
   const jobs = [], cl = classes();
   if (sel.cover) jobs.push({path:'១-ក្របមុខ/ក្របមុខ.pdf', get:() => pagesFor('cover')});
   if (sel.inner) INNER.forEach((t, i) => {
-    const per = SINGLE.has(t) && cl.length ? cl : [null];
-    per.forEach(c => jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + (c ? ' ' + safeName(c) : '') + '.pdf', get:() => withUi({inner:t, innerCls:c || S.ui.innerCls}, () => pagesFor('inner'))}));
+    const c = SINGLE.has(t) ? innerCls() : '';
+    jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + (c ? ' ' + safeName(c) : '') + '.pdf', get:() => withUi({inner:t}, () => pagesFor('inner'))});
   });
   if (sel.print){
     ['meeting','tech'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k}, () => pagesFor('print'))}));
@@ -694,7 +694,8 @@ ${field('មុខវិជ្ជាបង្រៀន', 'subject')}
 <div class="card"><h2>ជ្រើសថ្នាក់ដែលបង្រៀន</h2><div class="cgrid">${grid}</div>
 <div class="inline" style="margin-top:12px"><input type="text" id="newClass" placeholder="ថ្នាក់ផ្សេង (ឧ. 9G)" aria-label="ថ្នាក់ផ្សេង"><button class="btn" data-act="addClass">បន្ថែម</button></div>
 ${extra.length ? `<div class="chips" style="margin-top:10px">${extra.map(c => `<button class="chip on x" data-act="tc" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
-<p class="help">បានជ្រើស៖ <b>${esc(classes().join(', ') || 'មិនទាន់មាន')}</b> · សិស្សនឹងទាញតាមថ្នាក់ដែលបានជ្រើស។</p></div>
+<p class="help">បានជ្រើស៖ <b>${esc(classes().join(', ') || 'មិនទាន់មាន')}</b> · សិស្សនឹងទាញតាមថ្នាក់ដែលបានជ្រើស។</p>
+<div class="field" style="margin-top:12px"><label for="homeSel">ថ្នាក់បន្ទុក (ប្រើលើក្របក្រុមប្រឹក្សាថ្នាក់ ផែនការបន្ទុកថ្នាក់ ផែនការសិស្ស)</label><select id="homeSel" data-act-change="homeroom">${classes().map(c=>`<option ${c===innerCls()?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div>
 </div></div>`;
   fillTeacherOptions();
 }
@@ -727,7 +728,7 @@ function renderCover(){
 function renderInner(){
   $('#app').innerHTML = `<div class="split"><div class="card"><h2>ក្របខាងក្នុង</h2>
 <div class="field"><label for="innerSel">ជ្រើសប្រភេទ</label><select id="innerSel" data-ui="inner">${INNER.map(t=>`<option ${t===S.ui.inner?'selected':''}>${t}</option>`).join('')}<option value="__all" ${S.ui.inner==='__all'?'selected':''}>ទាំងអស់ (${INNER.length} ទំព័រ)</option></select></div>
-${(SINGLE.has(S.ui.inner) || S.ui.inner === '__all') ? `<div class="field"><label for="innerClsSel">ថ្នាក់ទី (សម្រាប់ផែនការសិស្ស ផែនការបន្ទុកថ្នាក់ ក្រុមប្រឹក្សាថ្នាក់)</label><select id="innerClsSel" data-ui="innerCls">${classes().map(c=>`<option ${c===innerCls()?'selected':''}>${esc(c)}</option>`).join('')}</select></div>` : ''}
+${(SINGLE.has(S.ui.inner) || S.ui.inner === '__all') ? `<p class="help">ថ្នាក់ទី <b>${esc(innerCls() || 'មិនទាន់កំណត់')}</b> ជាថ្នាក់បន្ទុក កំណត់នៅផ្នែក «ការកំណត់»។</p>` : ''}
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button></div>
 <p class="help" id="logonote" hidden>ឡូហ្គោក្រសួងមិនទាន់មានទេ។ បន្ថែមនៅផ្នែក «ការកំណត់»។</p></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
@@ -764,6 +765,7 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'zc' || t.id === 'zi' || t.id === 'zp'){ ZSEL[{zc:'cover',zi:'inner',zp:'print'}[t.id]] = t.checked; const b = $('#zbtn'); if (b) b.textContent = 'Save all as ZIP (' + zipJobs(ZSEL).length + ' PDF)'; return; }
   if (t.dataset.actChange === 'teacher') pickTeacher(t.value);
+  else if (t.dataset.actChange === 'homeroom'){ S.s.homeroom = t.value; save(); }
   else if (t.dataset.ui && t.dataset.ui !== 'month'){
     S.ui[t.dataset.ui] = t.value; save();
     if (t.dataset.ui === 'kind') renderPrint(); else if (t.dataset.ui === 'inner') renderInner(); else updatePreview();
