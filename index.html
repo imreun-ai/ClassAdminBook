@@ -277,7 +277,9 @@ function fitAll(root){
 const FIT_JS = 'var fitAll='+fitAll.toString()+';fitAll(document);if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){fitAll(document)});}';
 
 /* ---------- covers ---------- */
-function coverHTML(innerTitle){
+const SINGLE = new Set(['ផែនការសិស្ស','ផែនការបន្ទុកថ្នាក់','ក្រុមប្រឹក្សាថ្នាក់']);
+function innerCls(){ const c = classes(); return c.includes(S.ui.innerCls) ? S.ui.innerCls : (c[0] || ''); }
+function coverHTML(innerTitle, one){
   const s = S.s;
   const mid = innerTitle ? `<div class="cv-t2 fit">${esc(innerTitle)}</div>` : `<div class="cv-t1 fit">រដ្ឋបាលថ្នាក់</div>`;
   const logo = s.logo ? `<img class="cv-logo" src="${s.logo}" alt="">` : '';
@@ -289,7 +291,7 @@ function coverHTML(innerTitle){
  <div><div class="cv-dep fit">${esc(s.department)}</div><div class="cv-off fit">${esc(s.office)}</div></div>
  <div><div class="cv-sch fit">${esc(s.school)}</div><div class="cv-book">សៀវភៅ</div>${mid}
   <div class="cv-name fit">ឈ្មោះគ្រូ ${esc(s.teacher)}</div><div class="cv-sub fit">មុខវិជ្ជាបង្រៀន ${esc(s.subject)}</div>
-  <div class="cv-cls fit">បង្រៀនថ្នាក់ទី ${esc(classes().join(','))}</div></div>
+  <div class="cv-cls fit">${one ? 'ថ្នាក់ទី ' + esc(one) : 'បង្រៀនថ្នាក់ទី ' + esc(classes().join(','))}</div></div>
  <div><div class="cv-tel fit">លេខទូរស័ព្ទ ${esc(s.phone)}</div></div>
 </div>
 <div class="cv-foot"><div class="fit">ឆ្នាំសិក្សា ${esc(s.year)}</div></div>
@@ -383,7 +385,7 @@ function pagesFor(tab){
   if (tab === 'inner'){
     const t = S.ui.inner;
     const list = t === '__all' ? INNER : [t];
-    return {pages:list.map(coverHTML), land:false, file:'inner-cover' + (t==='__all'?'-all':'') + '.html'};
+    return {pages:list.map(x => coverHTML(x, SINGLE.has(x) ? innerCls() : null)), land:false, file:'inner-cover' + (t==='__all'?'-all':'') + '.html'};
   }
   return buildPrint(S.ui.kind);
 }
@@ -463,14 +465,17 @@ async function makePdf(btn){
 /* ---------- ZIP of everything ---------- */
 const safeName = s => String(s).replace(/[\\/:*?"<>|]+/g, '-').trim();
 function withUi(patch, fn){
-  const old = {kind:S.ui.kind, cls:S.ui.cls, inner:S.ui.inner};
+  const old = {kind:S.ui.kind, cls:S.ui.cls, inner:S.ui.inner, innerCls:S.ui.innerCls};
   Object.assign(S.ui, patch);
   try{ return fn(); } finally { Object.assign(S.ui, old); }
 }
 function zipJobs(sel){
   const jobs = [], cl = classes();
   if (sel.cover) jobs.push({path:'១-ក្របមុខ/ក្របមុខ.pdf', get:() => pagesFor('cover')});
-  if (sel.inner) INNER.forEach((t, i) => jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + '.pdf', get:() => withUi({inner:t}, () => pagesFor('inner'))}));
+  if (sel.inner) INNER.forEach((t, i) => {
+    const per = SINGLE.has(t) && cl.length ? cl : [null];
+    per.forEach(c => jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + (c ? ' ' + safeName(c) : '') + '.pdf', get:() => withUi({inner:t, innerCls:c || S.ui.innerCls}, () => pagesFor('inner'))}));
+  });
   if (sel.print){
     ['meeting','tech'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k}, () => pagesFor('print'))}));
     ['extract','absence','scores','slow'].forEach(k => cl.forEach(c => jobs.push({path:'៣-ឯកសារព្រីន/ថ្នាក់ ' + safeName(c) + '/' + safeName(KINDS[k].label) + ' ' + safeName(c) + '.pdf', get:() => withUi({kind:k, cls:c}, () => pagesFor('print'))})));
@@ -722,6 +727,7 @@ function renderCover(){
 function renderInner(){
   $('#app').innerHTML = `<div class="split"><div class="card"><h2>ក្របខាងក្នុង</h2>
 <div class="field"><label for="innerSel">ជ្រើសប្រភេទ</label><select id="innerSel" data-ui="inner">${INNER.map(t=>`<option ${t===S.ui.inner?'selected':''}>${t}</option>`).join('')}<option value="__all" ${S.ui.inner==='__all'?'selected':''}>ទាំងអស់ (${INNER.length} ទំព័រ)</option></select></div>
+${(SINGLE.has(S.ui.inner) || S.ui.inner === '__all') ? `<div class="field"><label for="innerClsSel">ថ្នាក់ទី (សម្រាប់ផែនការសិស្ស ផែនការបន្ទុកថ្នាក់ ក្រុមប្រឹក្សាថ្នាក់)</label><select id="innerClsSel" data-ui="innerCls">${classes().map(c=>`<option ${c===innerCls()?'selected':''}>${esc(c)}</option>`).join('')}</select></div>` : ''}
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button></div>
 <p class="help" id="logonote" hidden>ឡូហ្គោក្រសួងមិនទាន់មានទេ។ បន្ថែមនៅផ្នែក «ការកំណត់»។</p></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
@@ -760,7 +766,7 @@ document.addEventListener('change', e => {
   if (t.dataset.actChange === 'teacher') pickTeacher(t.value);
   else if (t.dataset.ui && t.dataset.ui !== 'month'){
     S.ui[t.dataset.ui] = t.value; save();
-    if (t.dataset.ui === 'kind') renderPrint(); else updatePreview();
+    if (t.dataset.ui === 'kind') renderPrint(); else if (t.dataset.ui === 'inner') renderInner(); else updatePreview();
   }
   else if (t.id === 'logoFile' && t.files[0]) readLogo(t.files[0]);
   else if (t.id === 'importFile' && t.files[0]) importBackup(t.files[0]);
