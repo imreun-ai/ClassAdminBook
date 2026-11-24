@@ -124,7 +124,7 @@ const KINDS = {
   extract:{label:'គ. សម្រង់អត្ថបទ', title:'សម្រង់អត្ថបទ', byClass:true},
   absence:{label:'ឃ. សម្រង់អវត្តមានសិស្ស', title:'សម្រង់អវត្តមានសិស្ស', byClass:true},
   scores:{label:'ង. សម្រង់ពិន្ទុ', title:'សម្រង់ពិន្ទុសិស្ស', byClass:true},
-  agreement:{label:'ស. កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា', title:'កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា', byClass:false, editable:true},
+  agreement:{label:'កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា', title:'កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា', byClass:false, editable:true},
   slow:{label:'ច. ជួយសិស្សរៀនយឺត', title:'សកម្មភាព និងលទ្ធផលជួយសិស្សរៀនយឺត', byClass:true}
 };
 let toastTimer;
@@ -447,7 +447,7 @@ function agTimeline(id, head, rows){
 `<tr><td class="m">${r[0]}</td><td>${ed(id + '.a.' + i, r[1])}</td><td>${ed(id + '.f.' + i, r[2])}</td><td>${ed(id + '.t.' + i, r[3])}</td><td>${ed(id + '.o.' + i, r[4] || '')}</td></tr>`).join('')}</tbody></table>`;
 }
 function agActs(id, list){
-  return `<ol class="act">${list.map((t, i) => `<li><b>${toKh(i + 1)}</b><div>${ed(id + '.' + i, t)}</div></li>`).join('')}</ol>`;
+  return list.map((t, i) => `<ol class="act"><li><b>${toKh(i + 1)}</b><div>${ed(id + '.' + i, t)}</div></li></ol>`).join('<!--B-->');
 }
 function agStd1Table(c, nt, nf){
   const list = students(c), t = list.length, f = list.filter(s => s.sex === 'ស').length;
@@ -461,15 +461,36 @@ function agStd1Head(cl){
   return `<thead><tr><th rowspan="2" style="width:30mm">ចំនួនសិស្សទទួលបាននិទ្ទេស (${t}/${f})</th><th colspan="6">និទ្ទេស</th><th rowspan="2" style="width:22mm">ផ្សេងៗ</th></tr><tr>${['A','B','C','D','E','F'].map(x => `<th>${x}</th>`).join('')}</tr></thead>`;
 }
 function agTitle(n, a, b){ return `<h4 class="rd">${a}</h4><h5 class="bl">${b}</h5>`; }
+function agPaginate(blocks){
+  const host = document.createElement('div');
+  host.style.cssText = 'position:fixed;left:-20000px;top:0;width:300mm;';
+  host.innerHTML = '<style>' + DOC_CSS + '</style><section class="sheet ag"><div class="agp"></div></section>';
+  document.body.appendChild(host);
+  const agp = host.querySelector('.agp'), pages = [];
+  let cur = [];
+  const flush = () => { if (cur.length) pages.push('<section class="sheet ag"><div class="agp">' + cur.join('') + '</div></section>'); cur = []; };
+  try{
+    blocks.forEach(b => {
+      agp.insertAdjacentHTML('beforeend', b);
+      if (agp.scrollHeight > agp.clientHeight + 1 && cur.length){
+        flush(); agp.innerHTML = b;
+      }
+      cur.push(b);
+    });
+    flush();
+  } finally { host.remove(); }
+  return pages.length ? pages : ['<section class="sheet ag"><div class="agp"></div></section>'];
+}
 function agdoc(){
   const cl = classes();
   const [y1, y2] = agYears();
   const [tt, tf] = agCounts(cl);
   const clTxt = cl.map(khCls).join(',');
   const kv = (l, v) => `<div class="kv"><b>${l}</b><i>៖</i><span>${v}</span></div>`;
-  const pages = [];
+  const blocks = [];
+  const B = html => html.split('<!--B-->').forEach(x => blocks.push('<div class="blk">' + x + '</div>'));
   /* page 1 */
-  pages.push(`<section class="sheet ag"><div class="agp">
+  B(`
 <div class="moul" style="font-size:11pt">ព្រះរាជាណាចក្រកម្ពុជា</div><div class="moul" style="font-size:10pt">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
 <div class="moul" style="font-size:12pt">កិច្ចព្រមព្រៀងលទ្ធផលការងារ<br>និងការអភិវឌ្ឍវិជ្ជាជីវៈប្រចាំឆ្នាំ</div>
 <div class="moul gr" style="font-size:12pt">របស់គ្រូមុខវិជ្ជា</div>
@@ -488,12 +509,13 @@ ${kv('ឈ្មោះ', ed('n1', 'សួស ម៉េងសៀ') + ' &nbsp;&nbsp
 <div class="c bl" style="margin:2mm 0"><b>និង</b></div>
 <div class="pu" style="margin:3mm 0 .5mm"><b>${ed('r2', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></div>
 ${kv('ឈ្មោះ', ed('n2', 'ជេដ្ធ សេងញិន') + ' &nbsp;&nbsp;&nbsp;ភេទ៖ ' + ed('g2', 'ប្រុស'))}${kv('ថ្ងៃខែឆ្នាំ ឯកភាព', ed('dt2', ''))}${kv('ហត្ថលេខា', ed('sg2', ''))}
-</div></section>`);
-  /* standard 1 tables: first two classes on page 1, the rest on extra pages */
-  const std1 = (ch, first) => `${first ? `<h4 class="rd" style="margin-top:3mm">ស្តង់ដាទី១៖ លទ្ធផលសិក្សារបស់សិស្ស</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី១៖ លទ្ធផលសិក្សារបស់សិស្សកើនឡើង</h5>` : '<h5 class="bl">ស្តង់ដាទី១ (តរៀង)</h5>'}
-<table><colgroup><col style="width:30mm">${'<col>'.repeat(6)}<col style="width:22mm"></colgroup>${agStd1Head(cl)}<tbody>${ch.map(c => agStd1Table(c)).join('') || '<tr><td colspan="8">សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់»</td></tr>'}</tbody></table>`;
-  pages[0] = pages[0].replace('</div></section>', std1(cl.slice(0, 2), true) + '</div></section>');
-  for (let i = 2; i < cl.length; i += 5) pages.push(`<section class="sheet ag"><div class="agp">${std1(cl.slice(i, i + 5), false)}</div></section>`);
+`);
+  /* standard 1: one table per class, heading and column header only before the first table */
+  const t1 = (c, head) => `<table><colgroup><col style="width:30mm">${'<col>'.repeat(6)}<col style="width:22mm"></colgroup>${head ? agStd1Head(cl) : ''}<tbody>${agStd1Table(c)}</tbody></table>`;
+  if (cl.length){
+    B(`<h4 class="rd" style="margin-top:3mm">ស្តង់ដាទី១៖ លទ្ធផលសិក្សារបស់សិស្ស</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី១៖ លទ្ធផលសិក្សារបស់សិស្សកើនឡើង</h5>` + t1(cl[0], true));
+    cl.slice(1).forEach(c => B(t1(c, false)));
+  } else B(`<h4 class="rd">ស្តង់ដាទី១៖ លទ្ធផលសិក្សារបស់សិស្ស</h4><p>សូមជ្រើសថ្នាក់នៅផ្នែក «ការកំណត់»</p>`);
   /* page: standard 1 activities + timeline + standard 2 table */
   const act1 = [
     'ជួយសិស្សម្នាក់ៗបានប្រើអាប់ស្វ័យសិក្សាមេរៀន (GEIP Ed-Tech APP) មុនពេលរៀនជាមួយគ្រូផ្ទាល់ សម្រាប់ប្រកួតយកឱ្យបានសិស្ស ១០នាក់ កម្រិតសាលា ឬ ៥០នាក់ កម្រិតសាលា ឬ ១០០នាក់ កម្រិតសាលា',
@@ -503,14 +525,14 @@ ${kv('ឈ្មោះ', ed('n2', 'ជេដ្ធ សេងញិន') + ' &nbsp
     'ជួយសិស្សតាមក្រុមប្រកួតល្បឿនអំណាន អត្ថបទមេរៀនប្រចាំសប្តាហ៍ ដើម្បីជ្រើសរើសក្រុមឆ្នើម ទៅបន្តប្រកួតនៅកម្រិតសាលារៀន'
   ];
   const stdN = toKh(tt) + '/' + toKh(tf);
-  pages.push(`<section class="sheet ag"><div class="agp">
+  B(`
 <h5 class="rd">សកម្មភាព</h5>${agActs('a1', act1)}
-<h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
+<!--B--><h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
 ${agTimeline('t1', ['ពីខែ', 'ដល់ខែ'], [
   ['១', 'សិស្សប្រើអាប់ស្វ័យសិក្សា', 'ធ្នូ' + y1, 'តុលា' + y2],
   ['៣', 'សិស្សតាមក្រុមផលិតសំណួរ លំហាត់ និងចំណោទ', 'មករា' + y2, 'តុលា' + y2],
   ['៥', 'សិស្សប្រកួតល្បឿនអំណានប្រចាំសប្តាហ៍', 'កុម្ភៈ' + y2, 'តុលា' + y2]])}
-<h4 class="rd">ស្តង់ដាទី២៖ ដំណើរការបង្រៀន និងរៀន</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី២៖ ប្រសិទ្ធភាពបង្រៀនកើនឡើង</h5>
+<!--B--><h4 class="rd">ស្តង់ដាទី២៖ ដំណើរការបង្រៀន និងរៀន</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី២៖ ប្រសិទ្ធភាពបង្រៀនកើនឡើង</h5>
 <table><colgroup><col style="width:16mm"><col><col><col><col><col style="width:16mm"></colgroup>
 <thead><tr><th></th><th>ផែនការរៀនសូត្រឆ្នាំរបស់សិស្ស</th><th>ផែនការបង្រៀន ៣ឆ្នាំ ១ឆ្នាំ និង៣ខែ របស់គ្រូបង្រៀន</th><th>បំណែងចែកកម្មវិធីសិក្សាសម្រាប់បង្រៀនប្រចាំសប្តាហ៍តាមខែ ក្នុងឆ្នាំសិក្សា</th><th>គម្រោងបង្រៀនមួយមេរៀនមានច្រើនម៉ោងសិក្សា</th><th>ផ្សេងៗ</th></tr></thead>
 <tbody><tr><td class="m"><b>គ្រោង</b></td>
@@ -520,7 +542,7 @@ ${agTimeline('t1', ['ពីខែ', 'ដល់ខែ'], [
 <td>${ed('s2.p.3', 'មានគម្រោងបង្រៀនមួយមេរៀនមានច្រើនម៉ោងសិក្សា (ដែលបានចូលរួមធ្វើជាមួយគ្រូទាំងអស់ ដឹកនាំដោយគ្រូទទួលបន្ទុកកម្រិតថ្នាក់)')}</td>
 <td>${ed('s2.p.4', '')}</td></tr>
 <tr><td class="m"><b>សម្រេច</b></td><td class="m">${ed('s2.r.0', stdN + ' នាក់')}</td><td class="m">${ed('s2.r.1', 'មាន')}</td><td class="m">${ed('s2.r.2', 'មិនមាន')}</td><td class="m">${ed('s2.r.3', 'មិនមាន')}</td><td>${ed('s2.r.4', '')}</td></tr></tbody></table>
-</div></section>`);
+`);
   /* page: standard 2 activities + timeline */
   const act2 = [
     'ជួយសិស្សម្នាក់ៗធ្វើផែនការរៀនសូត្រឆ្នាំ ដោយមានអ្នកអាណាព្យាបាលចូលរួម ពិគ្រោះយោបល់ជាមួយកូន និងគ្រូបង្រៀន ព្រមទាំងមានហត្ថលេខា ឬស្នាមមេដៃដឹងឮ និងគាំទ្រការសម្រេចចិត្តរបស់កូន',
@@ -528,43 +550,43 @@ ${agTimeline('t1', ['ពីខែ', 'ដល់ខែ'], [
     'ចូលរួមជាមួយគ្រូបង្រៀនទាំងអស់នៅក្នុងក្រុមកម្រិតថ្នាក់ ដើម្បីធ្វើបំណែងចែកកម្មវិធីសិក្សាសម្រាប់បង្រៀនប្រចាំសប្តាហ៍តាមខែ ក្នុងឆ្នាំសិក្សា',
     'ចូលរួមជាមួយគ្រូបង្រៀនទាំងអស់នៅក្នុងក្រុមកម្រិតថ្នាក់ គម្រោងបង្រៀនមួយមេរៀនមានច្រើនម៉ោងសិក្សា'
   ];
-  pages.push(`<section class="sheet ag"><div class="agp">
+  B(`
 <h5 class="rd">សកម្មភាព</h5>${agActs('a2', act2)}
-<h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
+<!--B--><h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
 ${agTimeline('t2', ['ពីខែ', 'ដល់ខែ'], [
   ['១', 'ជួយសិស្សម្នាក់ៗធ្វើផែនការរៀនសូត្រឆ្នាំ', 'មករា' + y2, 'មីនា' + y2],
   ['២', 'ចូលរួមជាមួយគ្រូបង្រៀនទាំងអស់នៅក្នុងក្រុមកម្រិតថ្នាក់ ដើម្បីធ្វើផែនការបង្រៀន៣ឆ្នាំ ១ឆ្នាំ និង៣ខែម្នាក់ៗ ដោយមានហត្ថលេខារបស់គ្រូកាន់កម្រិតថ្នាក់ នាយករងបច្ចេកទេស និងគគថ', 'មករា' + y2, 'មីនា' + y2],
   ['៣', 'ចូលរួមធ្វើបំណែងចែកកម្មវិធីសិក្សាសម្រាប់បង្រៀនប្រចាំសប្តាហ៍តាមខែ', '', ''],
   ['៤', 'ចូលរួមធ្វើគម្រោងបង្រៀនមួយមេរៀនមានច្រើនម៉ោងសិក្សា', '', '']])}
-</div></section>`);
+`);
   /* page: professional development */
-  const dev = (id, t1, acts, rows) => `<h5 class="bl">${t1}</h5><h5 class="rd" style="margin-top:0">សកម្មភាព</h5>${agActs(id, acts)}
-<table><colgroup><col style="width:8mm"><col><col style="width:26mm"><col style="width:26mm"><col style="width:20mm"></colgroup><thead><tr><th>ល.រ</th><th>សកម្មភាព</th><th>ចាប់ពីពេលណា</th><th>ដល់ពេលណា</th><th>ផ្សេងៗ</th></tr></thead><tbody>${rows.map((r, i) =>
+  const dev = (id, t1, acts, rows) => `<h5 class="bl">${t1}</h5><h5 class="rd" style="margin-top:0">សកម្មភាព</h5>${agActs(id, acts)}<!--B--><table><colgroup><col style="width:8mm"><col><col style="width:26mm"><col style="width:26mm"><col style="width:20mm"></colgroup><thead><tr><th>ល.រ</th><th>សកម្មភាព</th><th>ចាប់ពីពេលណា</th><th>ដល់ពេលណា</th><th>ផ្សេងៗ</th></tr></thead><tbody>${rows.map((r, i) =>
     `<tr><td class="m">${toKh(i + 1)}</td><td>${ed(id + 't.a.' + i, r)}</td><td>${ed(id + 't.f.' + i, '')}</td><td>${ed(id + 't.t.' + i, '')}</td><td>${ed(id + 't.o.' + i, 'មិនមាន')}</td></tr>`).join('')}</tbody></table>`;
-  pages.push(`<section class="sheet ag"><div class="agp">
+  B(`
 <h4 class="rd">វត្ថុបំណងអភិវឌ្ឍវិជ្ជាជីវៈគ្រូបង្រៀន</h4>
 ${dev('d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិញ្ញាបត្រ បង្កើនគុណវុឌ្ឍិគ្រូបង្រៀន', [
   'ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន ឬរៀនជាអ្នកស្ម័គ្រចិត្ត (បរិញ្ញាបត្រ)',
   'ពិគ្រោះយោបល់ជាមួយអ្នករៀនក្នុងកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន សម្រាប់យកមកអនុវត្តសាកល្បងជាក់ស្តែងនៅតាមថ្នាក់រៀន',
   'ចូលរួមប្រជុំបច្ចេកទេស និងប្រជុំពិនិត្យតាមដានជាប្រចាំសប្តាហ៍ ជាមួយក្រុមការងារកម្រិតខេត្ត និងកម្រិតតំបន់ ដោយឆ្លុះបញ្ចាំងពីបទពិសោធន៍ពីក្នុងសាលារៀនខ្លួន ទៅនឹងបទពិសោធន៍របស់សាលារៀនផ្សេងទៀត អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី» ដើម្បីអាចបង្កើនសមត្ថភាពបង្រៀនបានជាប្រចាំ'
 ], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាថ្នាក់រៀនជាប់ពិន្ទុស្តង់ដាទី២', 'ចូលរួមរៀនសូត្រក្នុងដំណើរការប្រជុំបច្ចេកទេស និងប្រជុំពិនិត្យតាមដានជាប្រចាំ ជាមួយក្រុមការងារខេត្ត និងតំបន់'])}
-${dev('d2', 'លទ្ធផលរំពឹងទុកទី២៖ បរិញ្ញាបត្រជាន់ខ្ពស់ បង្កើនគុណវុឌ្ឍិគ្រូបង្រៀន', [
+<!--B-->${dev('d2', 'លទ្ធផលរំពឹងទុកទី២៖ បរិញ្ញាបត្រជាន់ខ្ពស់ បង្កើនគុណវុឌ្ឍិគ្រូបង្រៀន', [
   'ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន ឬរៀនជាអ្នកស្ម័គ្រចិត្ត (បរិញ្ញាបត្រជាន់ខ្ពស់)',
   'ជួយសាលារៀនឱ្យជាប់ពិន្ទុស្តង់ដាសាលាគំរូ ផ្តោតលើស្តង់ដាទី២',
   'ជួយគ្រូមុខវិជ្ជាផ្សេងទៀតនៅក្នុងសាលា និងនៅសាលារៀនផ្សេងក្នុងមូលដ្ឋាន តាមរយៈការសម្របសម្រួលការប្រជុំបច្ចេកទេសប្រចាំសប្តាហ៍ អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី»'
 ], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាសាលារៀនជាប់ពិន្ទុស្តង់ដាទី២', 'ដឹកនាំសកម្មភាពប្រជុំបច្ចេកទេសប្រចាំ នៅកម្រិតខេត្ត និងតំបន់ដើម្បីជួយគ្រូក្នុងសាលា និងក្រៅសាលាអំពីការអនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី'])}
-<div class="sigs">
+<!--B--><div class="sigs">
  <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('f.d1', 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....')}<br>${ed('f.p1', 'ធ្វើនៅសាលា ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...')}</div><div class="pu" style="margin-top:2mm"><b>${ed('f.r1', 'នាយករងបច្ចេកទេស / នាយកសាលា')}</b></div><div style="height:16mm"></div><div>${ed('f.n1', '')}</div></div>
  <div><div>${ed('f.d2', 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....')}<br>${ed('f.p2', ed_ph())}</div><div class="pu" style="margin-top:2mm"><b>${ed('f.r2', 'គ្រូមុខវិជ្ជា')}</b></div><div style="height:16mm"></div><div>${ed('f.n2', S.s.teacher)}</div></div>
 </div>
 <div class="c" style="margin-top:3mm">បានពិនិត្យ និងឯកភាព<br>${ed('f.d3', 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....')}<br><span class="pu"><b>${ed('f.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('f.n3', '')}</div>
-</div></section>`);
-  return {pages, land:false, file:'work-agreement.html'};
+`);
+  return {pages: agPaginate(blocks), land:false, file:'work-agreement.html'};
 }
 function ed_ph(){ return agV('province', 'ពោធិ៍សាត់') + ' ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'; }
 DOC_CSS += AG_CSS;
 
 function pagesFor(tab){
+  if (tab === 'agree') return agdoc();
   if (tab === 'cover') return {pages:[coverHTML('')], land:false, file:'cover.html'};
   if (tab === 'inner'){
     const t = S.ui.inner;
@@ -730,7 +752,7 @@ async function copyText(t){
 }
 
 /* ---------- panels ---------- */
-const TABS = [['settings','១. ការកំណត់'],['students','២. បញ្ជីសិស្ស'],['cover','៣. ក្របមុខ'],['inner','៤. ក្របខាងក្នុង'],['print','៥. ព្រីនការងារ'],['all','៦. ទាញយកទាំងអស់']];
+const TABS = [['settings','១. ការកំណត់'],['students','២. បញ្ជីសិស្ស'],['cover','៣. ក្របមុខ'],['inner','៤. ក្របខាងក្នុង'],['print','៥. ព្រីនការងារ'],['agree','៦. កិច្ចព្រមព្រៀងការងារ'],['all','៧. ទាញយកទាំងអស់']];
 function renderTabs(){
   $('#tabs').innerHTML = TABS.map(([id,l]) => `<button class="tab" role="tab" data-act="tab" data-tab="${id}" aria-selected="${S.ui.tab===id}">${l}</button>`).join('');
 }
@@ -927,7 +949,7 @@ function renderPrint(){
   const cl = classes();
   if (S.ui.cls !== 'all' && !cl.includes(S.ui.cls)) S.ui.cls = 'all';
   $('#app').innerHTML = `<div class="split"><div class="card"><h2>ព្រីនការងារផ្សេងៗ</h2>
-<div class="field"><label for="kindSel">ឯកសារ</label><select id="kindSel" data-ui="kind">${Object.entries(KINDS).map(([id,v])=>`<option value="${id}" ${id===S.ui.kind?'selected':''}>${v.label}</option>`).join('')}</select></div>
+<div class="field"><label for="kindSel">ឯកសារ</label><select id="kindSel" data-ui="kind">${Object.entries(KINDS).filter(([id]) => id !== 'agreement').map(([id,v])=>`<option value="${id}" ${id===S.ui.kind?'selected':''}>${v.label}</option>`).join('')}</select></div>
 ${k.byClass?`<div class="field"><label for="clsSel">ថ្នាក់ (ឈ្មោះសិស្សទាញពីបញ្ជីថ្នាក់)</label><select id="clsSel" data-ui="cls"><option value="all" ${S.ui.cls==='all'?'selected':''}>ទាំងអស់ (${cl.length} ថ្នាក់)</option>${cl.map(c=>`<option ${c===S.ui.cls?'selected':''}>${esc(c)}</option>`).join('')}</select></div>`:''}
 ${(S.ui.kind==='absence'||S.ui.kind==='scores')?`<div class="field"><label for="mlist">ខែ/ជួរ (បំបែកដោយក្បៀស ប្តូរបាន)</label><input type="text" id="mlist" data-mlist="${S.ui.kind}" value="${esc((S.ui.monthsBy&&S.ui.monthsBy[S.ui.kind]!=null)?S.ui.monthsBy[S.ui.kind]:DEF_MONTHS[S.ui.kind])}"><p class="help">ឧ. ១១, ១២, ១, ២ ។ ${S.ui.kind==='absence'?'ជួរ «សរុប» ត្រូវបានបន្ថែមស្វ័យប្រវត្តិ។ ':''}អតិបរមា ១៤។ <button type="button" class="btn sm" data-act="mreset">កំណត់ដើម</button></p></div>`:''}
 ${k.monthly?`<div class="field"><label for="month">ខែ (ទុកទទេ ដើម្បីសរសេរដោយដៃ)</label><input type="text" id="month" data-ui="month" value="${esc(S.ui.month)}"></div>`:''}
@@ -937,7 +959,16 @@ ${k.editable?`<p class="help" style="margin-top:0">ចុចលើអក្ស�
 <div><div class="pvhead"><h2>មើលជាមុន</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
 }
-const RENDER = {all:renderAll, settings:renderSettings, students:renderStudents, cover:renderCover, inner:renderInner, print:renderPrint};
+function renderAgree(){
+  $('#app').innerHTML = `<div class="split"><div class="card"><h2>កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា</h2>
+<p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
+<p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
+<div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
+<div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
+  updatePreview();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.ui.tab === 'agree' && !window.__agFont){ window.__agFont = 1; const a = document.activeElement; if (!(a && a.classList && a.classList.contains('ed'))) updatePreview(); } });
+}
+const RENDER = {agree:renderAgree, all:renderAll, settings:renderSettings, students:renderStudents, cover:renderCover, inner:renderInner, print:renderPrint};
 function show(tab){ S.ui.tab = tab; save(); renderTabs(); RENDER[tab](); renderSyncbar(); document.body.classList.toggle('nodl', !DL); document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL); window.scrollTo({top:0}); }
 
 /* ---------- events ---------- */
@@ -1029,6 +1060,7 @@ document.addEventListener('click', async e => {
     save(); renderSettings();
   }
   else if (a === 'sync') syncSheet();
+  else if (a === 'agreflow') updatePreview();
   else if (a === 'agreset'){ S.agr = {}; save(); updatePreview(); toast('បានកំណត់ការកែឡើងវិញ'); }
   else if (a === 'pickT'){ tq = ''; pickTeacher(b.dataset.n); }
   else if (a === 'pdf') makePdf(b);
