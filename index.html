@@ -44,6 +44,21 @@ main{max-width:1240px;margin:18px auto 0}
 .pv .ed:hover{background:#fff4b8}
 .pv .ed:focus{background:#ffec8a;outline:1px solid #c9a227}
 .muted{color:var(--muted);font-size:13px}
+.plan-wrap{overflow-x:auto}
+table.plan{width:100%;border-collapse:collapse;font-size:13px;text-align:center}
+table.plan th,table.plan td{border:1px solid var(--line);padding:2px 4px;font-weight:500}
+table.plan thead th{background:var(--soft)}
+table.plan .sel{background:var(--soft)}
+table.plan thead th.sel{background:var(--primary)}
+table.plan thead th.sel .plan-yb{color:var(--primary-fg)}
+.plan-yb{font:inherit;font-size:12px;background:none;border:0;color:var(--fg);cursor:pointer;padding:4px 2px;white-space:nowrap}
+table.plan input{width:100%;min-width:34px;text-align:center;border:0;background:transparent;padding:4px 2px;border-radius:0}
+table.plan input:focus{background:var(--surface);outline:2px solid var(--accent);outline-offset:-2px}
+table.plan .pl-ok{color:var(--accent)}
+table.plan .pl-lo{color:var(--danger)}
+table.plan tr.pl-calc td{background:var(--soft);color:var(--muted)}
+table.plan tr.pl-calc td.bad{background:#f5b800;color:#14203f;font-weight:700}
+.plan-yb:focus-visible{outline:2px solid var(--accent)}
 .syncwrap{max-width:1240px;margin:12px auto 0}
 .syncbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
 summary{min-height:24px}
@@ -220,6 +235,30 @@ try{
   const raw = localStorage.getItem(KEY);
   if (raw){ const p = JSON.parse(raw); S = {s:{...DEFAULT.s,...p.s}, students:p.students||{}, agr:p.agr||{}, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...p.ui}}; }
 }catch(e){}
+const PLAN_DEF = {year:1, pct:[[2,5,10,10,23,50],[4,6,14,20,26,30],[8,15,17,30,20,10],[12,20,20,38,10,0],[16,25,25,29,5,0],[20,30,30,20,0,0]]};
+function normPlan(p){
+  const d = JSON.parse(JSON.stringify(PLAN_DEF));
+  if (!p || typeof p !== 'object') return d;
+  const y = +p.year; if (y >= 1 && y <= 6) d.year = Math.floor(y);
+  if (Array.isArray(p.pct)) d.pct = d.pct.map((row, i) => row.map((v, j) => { const x = p.pct[i] && +p.pct[i][j]; return (isFinite(x) && x >= 0) ? x : v; }));
+  return d;
+}
+S.s.plan = normPlan(S.s.plan);
+function planYear(){ return S.s.plan.year; }
+function clearPlanEdits(){ Object.keys(S.agr).forEach(k => { if (/^s1\.[^.]+\.1\.\d$/.test(k)) delete S.agr[k]; }); }
+function splitCounts(total, weights){
+  const sum = weights.reduce((a, b) => a + b, 0);
+  if (!total || !sum) return weights.map(() => 0);
+  const raw = weights.map(w => total * w / sum), base = raw.map(Math.floor);
+  const left = total - base.reduce((a, b) => a + b, 0);
+  const order = raw.map((r, i) => [r - base[i], i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  for (let k = 0; k < left; k++) base[order[k % order.length][1]]++;
+  return base;
+}
+function agPlan(t, f){
+  const tot = splitCounts(t, S.s.plan.pct[planYear() - 1]), fem = splitCounts(f, tot);
+  return tot.map((n, i) => n ? n + '/' + fem[i] : '0');
+}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 const classes = () => sortClasses(S.s.classes);
 
@@ -454,8 +493,9 @@ function agStd1Table(c, nt, nf){
   const list = students(c), t = list.length, f = list.filter(s => s.sex === 'ស').length;
   const rows = ['ដើមឆ្នាំ', 'គ្រោងចុងឆ្នាំ', 'សម្រេចចុងឆ្នាំ'];
   const g = ['A','B','C','D','E','F'];
+  const plan = agPlan(t, f);
   return `<tr><td class="cl" colspan="7">ថ្នាក់ទី ${esc(c)} (${t}/${f}) មុខវិជ្ជា ${ed('subj.' + c, S.s.subject)}</td><td rowspan="4">${ed('s1.o.' + c, '')}</td></tr>` +
-    rows.map((r, ri) => `<tr><td>${r}</td>${g.map((x, ci) => `<td class="m">${ed('s1.' + c + '.' + ri + '.' + ci, '')}</td>`).join('')}</tr>`).join('');
+    rows.map((r, ri) => `<tr><td>${r}</td>${g.map((x, ci) => `<td class="m">${ed('s1.' + c + '.' + ri + '.' + ci, ri === 1 ? plan[ci] : '')}</td>`).join('')}</tr>`).join('');
 }
 function agStd1Head(cl){
   const [t, f] = agCounts(cl);
@@ -909,8 +949,10 @@ ${field('មុខវិជ្ជាបង្រៀន', 'subject')}
 ${extra.length ? `<div class="chips" style="margin-top:10px">${extra.map(c => `<button class="chip on x" data-act="tc" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
 <p class="help">បានជ្រើស៖ <b>${esc(classes().join(', ') || 'មិនទាន់មាន')}</b> · សិស្សនឹងទាញតាមថ្នាក់ដែលបានជ្រើស។</p>
 <div class="field" style="margin-top:12px"><label for="homeSel">ថ្នាក់បន្ទុក (ប្រើលើក្របក្រុមប្រឹក្សាថ្នាក់ ផែនការបន្ទុកថ្នាក់ ផែនការសិស្ស)</label><select id="homeSel" data-act-change="homeroom">${classes().map(c=>`<option ${c===innerCls()?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div>
+${planCard()}
 </div></div>`;
   fillTeacherOptions();
+  refreshPlan();
 }
 function renderStudents(){
   const cl = classes();
@@ -971,12 +1013,42 @@ function renderAgree(){
   updatePreview();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.ui.tab === 'agree' && !window.__agFont){ window.__agFont = 1; const a = document.activeElement; if (!(a && a.classList && a.classList.contains('ed'))) updatePreview(); } });
 }
+function planCard(){
+  const y = planYear(), G = ['A','B','C','D','E','F'], P = S.s.plan.pct;
+  const head = P.map((_, i) => `<th class="${i + 1 === y ? 'sel' : ''}"><button type="button" class="plan-yb" data-act="planYearBtn" data-y="${i + 1}" aria-pressed="${i + 1 === y}">ឆ្នាំទី${toKh(i + 1)}</button></th>`).join('');
+  const row = (g, gi) => `<tr><th class="pl-g ${gi < 3 ? 'pl-ok' : 'pl-lo'}">${g}</th>${P.map((r, i) => `<td class="${i + 1 === y ? 'sel' : ''}"><input type="text" inputmode="numeric" data-plan="${i},${gi}" value="${r[gi]}" aria-label="ឆ្នាំទី${toKh(i + 1)} និទ្ទេស ${g}"></td>`).join('')}</tr>`;
+  const calc = (id, label, cls) => `<tr class="pl-calc"><th class="pl-g ${cls}">${label}</th>${P.map((_, i) => `<td class="${i + 1 === y ? 'sel' : ''}" id="${id}-${i}"></td>`).join('')}</tr>`;
+  return `<div class="card"><h2>តារាងភាគរយគោលដៅនិទ្ទេស (៦ ឆ្នាំ)</h2>
+<div class="field"><label for="planYearSel">ជ្រើសឆ្នាំទី (ប្រើគណនា «គ្រោងចុងឆ្នាំ» ក្នុងស្តង់ដាទី១)</label><select id="planYearSel" data-act-change="planYear">${P.map((_, i) => `<option value="${i + 1}" ${i + 1 === y ? 'selected' : ''}>ឆ្នាំទី${toKh(i + 1)}</option>`).join('')}</select></div>
+<div class="plan-wrap"><table class="plan"><thead><tr><th>និទ្ទេស</th>${head}</tr></thead><tbody>
+${calc('pl-abc', 'ABC', 'pl-ok')}${calc('pl-def', 'DEF', 'pl-lo')}${G.map(row).join('')}${calc('pl-sum', 'សរុប', '')}
+</tbody></table></div>
+<p class="help" id="planInfo"></p>
+<div class="inline" style="margin-top:8px"><button class="btn sm" data-act="planReset">កំណត់ភាគរយដើម</button></div></div>`;
+}
+function refreshPlan(){
+  const P = S.s.plan.pct, y = planYear();
+  P.forEach((r, i) => {
+    const a = r[0] + r[1] + r[2], d = r[3] + r[4] + r[5], s = a + d;
+    const set = (id, v, bad) => { const el = $('#' + id + '-' + i); if (el){ el.textContent = v + '%'; el.classList.toggle('bad', !!bad); } };
+    set('pl-abc', a); set('pl-def', d); set('pl-sum', s, Math.abs(s - 100) > 0.001);
+  });
+  const el = $('#planInfo'); if (!el) return;
+  const r = P[y - 1], s = r.reduce((a, b) => a + b, 0), G = ['A','B','C','D','E','F'];
+  el.innerHTML = 'ឆ្នាំទី' + toKh(y) + '៖ ' + G.map((g, i) => g + ' ' + r[i] + '%').join(' · ') + (Math.abs(s - 100) > 0.001 ? ' <b style="color:var(--danger)">(សរុប ' + s + '% មិនស្មើ ១០០%)</b>' : '') + '<br>ចំនួនសិស្សតាមនិទ្ទេសត្រូវបានគណនាតាមភាគរយនេះ ដោយបូកសរុបត្រូវនឹងចំនួនសិស្សក្នុងថ្នាក់ និងចំនួនស្រី (ឧ. A 10/4 = សរុប 10 ស្រី 4)។';
+}
 const RENDER = {agree:renderAgree, all:renderAll, settings:renderSettings, students:renderStudents, cover:renderCover, inner:renderInner, print:renderPrint};
 function show(tab){ S.ui.tab = tab; save(); renderTabs(); RENDER[tab](); renderSyncbar(); document.body.classList.toggle('nodl', !DL); document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL); window.scrollTo({top:0}); }
 
 /* ---------- events ---------- */
 document.addEventListener('input', e => {
   const t = e.target;
+  if (t.dataset.plan){
+    const [yi, gi] = t.dataset.plan.split(',').map(Number);
+    const v = parseFloat(String(t.value).replace(/[០-៩]/g, d => KHD.indexOf(d)).replace('%', ''));
+    S.s.plan.pct[yi][gi] = (isFinite(v) && v >= 0) ? v : 0;
+    clearPlanEdits(); save(); refreshPlan(); return;
+  }
   if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); return; }
   if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
   if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
@@ -988,6 +1060,7 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'zc' || t.id === 'zi' || t.id === 'zp'){ ZSEL[{zc:'cover',zi:'inner',zp:'print'}[t.id]] = t.checked; const b = $('#zbtn'); if (b) b.textContent = 'Save all as ZIP (' + zipJobs(ZSEL).length + ' PDF)'; return; }
   if (t.dataset.actChange === 'teacher') pickTeacher(t.value);
+  else if (t.dataset.actChange === 'planYear'){ S.s.plan.year = +t.value; clearPlanEdits(); save(); renderSettings(); }
   else if (t.dataset.actChange === 'homeroom'){ S.s.homeroom = t.value; save(); }
   else if (t.dataset.ui && t.dataset.ui !== 'month'){
     S.ui[t.dataset.ui] = t.value; save();
@@ -1049,7 +1122,7 @@ function importBackup(file){
       const p = JSON.parse(tx);
       if (!p || !p.s || !p.students) throw new Error('bad');
       S = {s:{...DEFAULT.s,...p.s}, students:p.students, agr:p.agr||{}, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...(p.ui||{}), tab:'settings'}};
-      save(); show('settings'); toast('បានស្តារទិន្នន័យ');
+      S.s.plan = normPlan(S.s.plan); save(); show('settings'); toast('បានស្តារទិន្នន័យ');
     }catch(err){ toast('ឯកសារបម្រុងទុកមិនត្រឹមត្រូវ'); }
   });
 }
@@ -1064,6 +1137,8 @@ document.addEventListener('click', async e => {
   }
   else if (a === 'sync') syncSheet();
   else if (a === 'agreflow') updatePreview();
+  else if (a === 'planYearBtn'){ S.s.plan.year = +b.dataset.y; clearPlanEdits(); save(); renderSettings(); }
+  else if (a === 'planReset'){ S.s.plan = normPlan(null); clearPlanEdits(); save(); renderSettings(); toast('បានកំណត់ភាគរយដើម'); }
   else if (a === 'agreset'){ S.agr = {}; save(); updatePreview(); toast('បានកំណត់ការកែឡើងវិញ'); }
   else if (a === 'pickT'){ tq = ''; pickTeacher(b.dataset.n); }
   else if (a === 'pdf') makePdf(b);
@@ -1100,6 +1175,7 @@ initDownloads().then(() => document.querySelectorAll('.nodl-only').forEach(b => 
   syncSheet();
 })();
 </script>
+
 
 </body>
 </html>
