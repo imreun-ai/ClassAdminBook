@@ -1181,7 +1181,7 @@ function renderAgree(){
   $('#app').innerHTML = `<div class="split"><div class="card"><h2>កិច្ចព្រមព្រៀងការងារ</h2>
 <p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
 <p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
-<div class="field"><label for="agKind">ប្រភេទកិច្ចព្រមព្រៀង</label><select id="agKind" data-ui="agKind"><option value="subject" ${S.ui.agKind!=='homeroom'?'selected':''}>កិច្ចព្រមព្រៀងគ្រូមុខវិជ្ជា</option><option value="homeroom" ${S.ui.agKind==='homeroom'?'selected':''}>កិច្ចព្រមព្រៀងគ្រូបន្ទុកថ្នាក់ (ថ្នាក់បន្ទុកក្នុងការកំណត់)</option></select></div>
+<div class="field"><label>ជ្រើសប្រភេទកិច្ចព្រមព្រៀង</label><div class="inline"><button type="button" class="btn ${S.ui.agKind!=='homeroom'?'pri':''}" data-act="agKind" data-v="subject" aria-pressed="${S.ui.agKind!=='homeroom'}">គ្រូមុខវិជ្ជា</button><button type="button" class="btn ${S.ui.agKind==='homeroom'?'pri':''}" data-act="agKind" data-v="homeroom" aria-pressed="${S.ui.agKind==='homeroom'}">គ្រូបន្ទុកថ្នាក់</button></div><div class="help">ឯកសារគ្រូបន្ទុកថ្នាក់ប្រើថ្នាក់បន្ទុកក្នុង «១. ការកំណត់»</div></div>
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
@@ -1310,6 +1310,7 @@ document.addEventListener('click', async e => {
     save(); renderSettings();
   }
   else if (a === 'sync') syncSheet();
+  else if (a === 'agKind'){ S.ui.agKind = b.dataset.v; save(); renderAgree(); }
   else if (a === 'agreflow') updatePreview();
   else if (a === 'planYearBtn'){ S.s.plan.year = +b.dataset.y; clearPlanEdits(); save(); renderSettings(); }
   else if (a === 'planReset'){ S.s.plan = normPlan(null); clearPlanEdits(); save(); renderSettings(); toast('បានកំណត់ភាគរយដើម'); }
