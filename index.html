@@ -226,7 +226,7 @@ function sortClasses(a){
 /* ---------- state ---------- */
 const KEY = 'sovphov-radthabal-v1';
 const DEFAULT = {
-  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', homeroom:'', monthFrom:'វិច្ឆិកា', monthTo:'សីហា', agrDate:'', place:'កណ្តៀង', province:'ពោធិ៍សាត់', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
+  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', homeroom:'', monthFrom:'វិច្ឆិកា', monthTo:'សីហា', agrDate:'', scriptUrl:'', scriptKey:'', place:'កណ្តៀង', province:'ពោធិ៍សាត់', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
   students:{}, agr:{}, sheet:{classes:[],teachers:[],at:0},
   ui:{tab:'settings', inner:'ប្រជុំការងារផ្សេងៗ', kind:'meeting', cls:'all', month:'', titles:{}, target:''}
 };
@@ -1071,6 +1071,7 @@ async function syncSheet(){
 
 
 /* ---------- save / load agreement edits in the connected Google Sheet (by teacher name) ---------- */
+const APPS_SCRIPT = "const KEY = '';  // (ជម្រើស) ពាក្យសម្ងាត់ — ត្រូវដូចក្នុង App\nconst TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};\nconst HEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];\nconst norm = s => String(s).replace(/\\s+/g, '');\nfunction doPost(e) {\n  let out;\n  try {\n    const r = JSON.parse(e.postData.contents);\n    if (KEY && r.key !== KEY) throw new Error('ពាក្យសម្ងាត់មិនត្រូវ');\n    const name = TABS[r.kind]; if (!name) throw new Error('kind');\n    const ss = SpreadsheetApp.getActive();\n    let sh = ss.getSheetByName(name);\n    if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, 7).setValues([HEAD]); sh.setFrozenRows(1); }\n    const last = Math.max(sh.getLastRow(), 1);\n    const names = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues().map(x => norm(x[0])) : [];\n    const idx = names.indexOf(norm(r.teacher));\n    if (r.op === 'save') {\n      const ch = []; for (let i = 0; i < 4; i++) ch.push(String(r.data).slice(i * 40000, (i + 1) * 40000));\n      const row = idx >= 0 ? idx + 2 : last + 1;\n      sh.getRange(row, 1, 1, 7).setValues([[r.teacher, r.desc || '', Utilities.formatDate(new Date(), 'Asia/Phnom_Penh', 'dd/MM/yyyy HH:mm'), ch[0], ch[1], ch[2], ch[3]]]);\n      out = {ok: true, row: row};\n    } else if (r.op === 'load') {\n      if (idx < 0) out = {ok: true, found: false};\n      else { const v = sh.getRange(idx + 2, 1, 1, 7).getValues()[0]; out = {ok: true, found: true, at: String(v[2]), data: v.slice(3).join('')}; }\n    } else throw new Error('op');\n  } catch (err) { out = {ok: false, error: String(err.message || err)}; }\n  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);\n}";
 const AGTAB = {subject:'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom:'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};
 const AGHEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];
 const AGCHUNK = 40000, AGCOLS = 4;
@@ -1080,6 +1081,9 @@ function agKindData(kind){ const o = {}; Object.keys(S.agr).forEach(k => { if (a
 function shMsg(t, err){ const el = document.getElementById('sheetMsg'); if (el){ el.textContent = t; el.className = err ? 'msg err' : 'muted'; } }
 function shErr(e){
   const c = e && e.code;
+  if (c === 'script_net') return 'ភ្ជាប់ Apps Script មិនបាន។ ពិនិត្យតំណ និងថា Deploy ជា «Anyone» (អ្នកណាក៏បាន)។';
+  if (c === 'script_bad') return 'Apps Script ឆ្លើយមិនត្រឹមត្រូវ។ ពិនិត្យថាតំណជា Web app (…/exec) ហើយបាន Deploy កំណែថ្មី។';
+  if (c === 'script_err') return 'Apps Script រាយការណ៍៖ ' + String((e && e.message) || '').slice(0, 140);
   if (c === 'not_in_manifest') return 'មិនទាន់អនុញ្ញាត Google Sheets សម្រាប់ការសរសេរ។ សូមផ្ទុកទំព័រឡើងវិញ ហើយចុច Allow ពេលសួរ។ (បើទើបតែធ្វើបច្ចុប្បន្នភាព App ត្រូវអនុញ្ញាតថ្មី)';
   if (c === 'tool_error') return 'Google Sheets រាយការណ៍កំហុស៖ ' + String((e && e.message) || '').slice(0, 160) + ' (ពិនិត្យថាអ្នកមានសិទ្ធិកែ Sheet នេះ)';
   if (c === 'server_unavailable' || c === 'upstream_error') return 'មិនប្រាកដថាបានរក្សាទុកឬអត់ (ការតភ្ជាប់មានបញ្ហា)។ សូមចុចទាញពី Sheet ដើម្បីពិនិត្យ ឬរក្សាទុកម្តងទៀត។';
@@ -1103,12 +1107,23 @@ async function shFindRow(kind){
   rows.forEach((row, i) => { if (idx < 0 && keyName(row[0] || '') === key) idx = i; });
   return {rows, idx};
 }
+const shCan = () => !!(MCP || (S.s.scriptUrl || '').trim());
 function shReady(){
-  if (!MCP) { shMsg('មុខងារនេះប្រើបានតែពេលបើក App ក្នុង claude.ai (ភ្ជាប់ Google Sheets)។', true); return false; }
-  if (!sheetId()){ shMsg('តំណ Google Sheet មិនត្រឹមត្រូវ។', true); return false; }
+  if (!shCan()){ shMsg('ត្រូវភ្ជាប់ Apps Script (ក្នុង «១. ការកំណត់» → តំណ Apps Script) ដើម្បីរក្សាទុកទៅ Sheet នៅក្រៅ claude.ai។', true); return false; }
+  if (!MCP && !/^https:\/\/script\.google\.com\//.test((S.s.scriptUrl || '').trim())){ shMsg('តំណ Apps Script មិនត្រឹមត្រូវ (ត្រូវចាប់ផ្តើមដោយ https://script.google.com/)។', true); return false; }
+  if (MCP && !sheetId()){ shMsg('តំណ Google Sheet មិនត្រឹមត្រូវ។', true); return false; }
   if (!S.s.teacher){ shMsg('សូមជ្រើសឈ្មោះគ្រូក្នុង «១. ការកំណត់» ជាមុន។', true); return false; }
   if (sheetBusy){ shMsg('កំពុងដំណើរការ… សូមរង់ចាំ។', false); return false; }
   return true;
+}
+async function scriptCall(body){
+  // plain-text POST = a "simple" CORS request; Apps Script answers JSON
+  let res;
+  try{ res = await fetch(S.s.scriptUrl.trim(), {method:'POST', body: JSON.stringify({...body, key: S.s.scriptKey || ''}), redirect:'follow'}); }
+  catch(e){ const er = new Error('network'); er.code = 'script_net'; throw er; }
+  let j; try{ j = await res.json(); }catch(e){ const er = new Error('bad'); er.code = 'script_bad'; throw er; }
+  if (!j.ok){ const er = new Error(j.error || 'error'); er.code = 'script_err'; throw er; }
+  return j;
 }
 async function sheetSave(kind, quiet){
   if (!shReady()) return;
@@ -1117,10 +1132,14 @@ async function sheetSave(kind, quiet){
     const json = JSON.stringify(agKindData(kind));
     if (json.length > AGCHUNK * AGCOLS){ shMsg('ទិន្នន័យធំពេក មិនអាចរក្សាទុកក្នុង Sheet។ សូមទាញយកបម្រុងទុក (.json)។', true); return; }
     const chunks = []; for (let i = 0; i < AGCOLS; i++) chunks.push(json.slice(i * AGCHUNK, (i + 1) * AGCHUNK));
+    const desc = kind === 'homeroom' ? 'ថ្នាក់បន្ទុក ' + (S.s.homeroom || '') : (S.s.subject || '') + ' · ថ្នាក់ ' + (S.s.classes || []).join(', ');
+    if (!MCP){
+      const j = await scriptCall({op:'save', kind, teacher: S.s.teacher, desc, data: json});
+      shMsg('✓ បានរក្សាទុក «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» (ជួរទី ' + j.row + ')', false); return;
+    }
     await shEnsureTab(kind);
     const {rows, idx} = await shFindRow(kind);
     const rowNo = (idx >= 0 ? idx : rows.length) + 2;
-    const desc = kind === 'homeroom' ? 'ថ្នាក់បន្ទុក ' + (S.s.homeroom || '') : (S.s.subject || '') + ' · ថ្នាក់ ' + (S.s.classes || []).join(', ');
     const stamp = new Date().toLocaleString('km-KH', {dateStyle:'medium', timeStyle:'short'});
     await MCP.callTool(SHEETSRV, 'update_values', {spreadsheetId: sheetId(), range: `'${AGTAB[kind]}'!A${rowNo}:G${rowNo}`, values: [[S.s.teacher, desc, stamp, ...chunks]]}, {cache:false});
     shMsg('✓ បានរក្សាទុក «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» (ជួរទី ' + rowNo + ') · ' + stamp, false);
@@ -1131,7 +1150,12 @@ async function sheetLoad(kind){
   if (!shReady()) return;
   sheetBusy = true; shMsg('កំពុងទាញពី Google Sheet…', false);
   try{
-    const {rows, idx} = await shFindRow(kind);
+    let rows, idx;
+    if (!MCP){
+      const j = await scriptCall({op:'load', kind, teacher: S.s.teacher});
+      if (!j.found){ shMsg('មិនទាន់មានទិន្នន័យរបស់ «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» ទេ។', true); return; }
+      rows = [['', '', j.at || '', j.data || '']]; idx = 0;
+    } else ({rows, idx} = await shFindRow(kind));
     if (idx < 0){ shMsg('មិនទាន់មានទិន្នន័យរបស់ «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» ទេ។', true); return; }
     const json = rows[idx].slice(3, 3 + AGCOLS).join('');
     const d = JSON.parse(json || '{}');
@@ -1143,7 +1167,7 @@ async function sheetLoad(kind){
   finally{ sheetBusy = false; }
 }
 function sheetDirty(k){
-  if (!S.ui.autoSheet || !MCP || !S.s.teacher) return;
+  if (!S.ui.autoSheet || !shCan() || !S.s.teacher) return;
   const kind = agKindOf(k); clearTimeout(sheetTimer);
   sheetTimer = setTimeout(() => { if (sheetBusy) sheetDirty(k); else sheetSave(kind, true); }, 5000);
 }
@@ -1200,6 +1224,13 @@ ${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២�
 <div class="field"><label for="agPlaceIn">ធ្វើនៅ (ទីកន្លែងធ្វើកិច្ចព្រមព្រៀង)</label><input id="agPlaceIn" type="text" data-set="place" value="${esc(S.s.place == null ? 'កណ្តៀង' : S.s.place)}" placeholder="កណ្តៀង" autocomplete="off"></div>
 <div class="field"><label for="agrDate">កាលបរិច្ឆេទកិច្ចព្រមព្រៀង (ថ្ងៃ/ខែ/ឆ្នាំ ឧ. 25/11/2026)</label><input id="agrDate" type="text" inputmode="numeric" data-set="agrDate" value="${esc(S.s.agrDate||'')}" placeholder="25/11/2026" autocomplete="off"><div class="help" id="agrDatePrev" aria-live="polite">${agrPrev()}</div></div>
 </div>
+<div class="card"><h2>ភ្ជាប់ Apps Script (សរសេរ Google Sheet នៅក្រៅ claude.ai)</h2>
+<p class="help" style="margin-top:0">ចាំបាច់តែពេលប្រើ App នៅលើ Vercel/ម៉ាស៊ីនផ្សេង ដើម្បី «រក្សាទុកទៅ Sheet / ទាញពី Sheet»។ ធ្វើម្តងគត់៖</p>
+<ol class="help" style="margin:0 0 8px 18px;padding:0;line-height:1.7"><li>បើក Google Sheet របស់អ្នក → <b>Extensions → Apps Script</b></li><li>លុបកូដចាស់ ហើយបិទភ្ជាប់កូដខាងក្រោម រួចចុច Save</li><li>ចុច <b>Deploy → New deployment → Web app</b> → Execute as: <b>Me</b> · Who has access: <b>Anyone</b> → Deploy (អនុញ្ញាតសិទ្ធិ)</li><li>ចម្លងតំណ Web app (…/exec) មកបិទភ្ជាប់ខាងក្រោម</li></ol>
+<div class="field"><label for="scriptUrl">តំណ Apps Script (Web app URL)</label><input id="scriptUrl" type="url" data-set="scriptUrl" value="${esc(S.s.scriptUrl || '')}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+<div class="field"><label for="scriptKey">ពាក្យសម្ងាត់ (ជម្រើស — ត្រូវដូចក្នុងកូដ «const KEY»)</label><input id="scriptKey" type="text" data-set="scriptKey" value="${esc(S.s.scriptKey || '')}" autocomplete="off"></div>
+<details><summary style="cursor:pointer;font-weight:600">កូដ Apps Script (ចុចបើក)</summary><textarea id="scriptCode" readonly rows="10" style="width:100%;font-family:monospace;font-size:12px;margin-top:8px">${esc(APPS_SCRIPT)}</textarea><div class="inline" style="margin-top:6px"><button type="button" class="btn sm" data-act="copyScript">ចម្លងកូដ</button></div></details>
+<p class="help" style="margin-bottom:0">សុវត្ថិភាព៖ អ្នកណាមានតំណនេះអាចអាន/សរសេរផ្ទាំងកិច្ចព្រមព្រៀងបាន។ ដាក់ពាក្យសម្ងាត់ដើម្បីការពារ។ តំណ Sheet ក្នុង App អានបានតែ Sheet ដែលចែករំលែកជា «Anyone with link: Viewer» ដដែល។</p></div>
 <div class="card"><h2>បម្រុងទុកទិន្នន័យ</h2>
 <p class="help" style="margin-top:0">ទិន្នន័យទាំងអស់ (ការកំណត់ សិស្ស ការកែក្នុងកិច្ចព្រមព្រៀង) រក្សាទុកក្នុងកម្មវិធីរុករកនៃម៉ាស៊ីននេះ។ ដើម្បីប្តូរម៉ាស៊ីន ឬឧបករណ៍ សូមទាញយកឯកសារបម្រុងទុក រួចស្តារនៅម៉ាស៊ីនថ្មី។</p>
 <p class="help" id="storeStat" aria-live="polite"></p>
@@ -1279,7 +1310,7 @@ function renderAgree(){
 <p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
 <p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
 <div class="field"><label>ជ្រើសប្រភេទកិច្ចព្រមព្រៀង</label><div class="inline"><button type="button" class="btn ${S.ui.agKind!=='homeroom'?'pri':''}" data-act="agKind" data-v="subject" aria-pressed="${S.ui.agKind!=='homeroom'}">គ្រូមុខវិជ្ជា</button><button type="button" class="btn ${S.ui.agKind==='homeroom'?'pri':''}" data-act="agKind" data-v="homeroom" aria-pressed="${S.ui.agKind==='homeroom'}">គ្រូបន្ទុកថ្នាក់</button></div><div class="help">ឯកសារគ្រូបន្ទុកថ្នាក់ប្រើថ្នាក់បន្ទុកក្នុង «១. ការកំណត់»</div></div>
-<div class="field"><label>រក្សាទុកការកែក្នុង Google Sheet (តាមឈ្មោះគ្រូ៖ ${esc(S.s.teacher || '—')})</label><div class="inline"><button type="button" class="btn" data-act="shSave" ${MCP ? '' : 'disabled'}>រក្សាទុកទៅ Sheet (${S.ui.agKind === 'homeroom' ? 'គ្រូបន្ទុកថ្នាក់' : 'គ្រូមុខវិជ្ជា'})</button><button type="button" class="btn" data-act="shLoad" ${MCP ? '' : 'disabled'}>ទាញពី Sheet</button></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" id="autoSheet" ${S.ui.autoSheet ? 'checked' : ''} ${MCP ? '' : 'disabled'}> រក្សាទុកស្វ័យប្រវត្តិក្រោយកែ</label><div class="muted" id="sheetMsg" aria-live="polite" style="margin:6px 0 0">${MCP ? 'រក្សាទុកក្នុងផ្ទាំង «' + AGTAB[S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject'] + '» (បង្កើតដោយស្វ័យប្រវត្តិ)។' : 'ប្រើបានតែពេលបើក App ក្នុង claude.ai។'}</div></div>
+<div class="field"><label>រក្សាទុកការកែក្នុង Google Sheet (តាមឈ្មោះគ្រូ៖ ${esc(S.s.teacher || '—')})</label><div class="inline"><button type="button" class="btn" data-act="shSave" ${shCan() ? '' : 'disabled'}>រក្សាទុកទៅ Sheet (${S.ui.agKind === 'homeroom' ? 'គ្រូបន្ទុកថ្នាក់' : 'គ្រូមុខវិជ្ជា'})</button><button type="button" class="btn" data-act="shLoad" ${shCan() ? '' : 'disabled'}>ទាញពី Sheet</button></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" id="autoSheet" ${S.ui.autoSheet ? 'checked' : ''} ${shCan() ? '' : 'disabled'}> រក្សាទុកស្វ័យប្រវត្តិក្រោយកែ</label><div class="muted" id="sheetMsg" aria-live="polite" style="margin:6px 0 0">${shCan() ? 'រក្សាទុកក្នុងផ្ទាំង «' + AGTAB[S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject'] + '» (បង្កើតដោយស្វ័យប្រវត្តិ)។' : 'ត្រូវភ្ជាប់ Apps Script ក្នុង «១. ការកំណត់» ដើម្បីប្រើនៅក្រៅ claude.ai។'}</div></div>
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
@@ -1409,6 +1440,7 @@ document.addEventListener('click', async e => {
     save(); renderSettings();
   }
   else if (a === 'sync') syncSheet();
+  else if (a === 'copyScript'){ const ta = $('#scriptCode'); try{ navigator.clipboard.writeText(APPS_SCRIPT).then(() => { b.textContent = 'បានចម្លង ✓'; }); }catch(e){ ta.select(); document.execCommand('copy'); b.textContent = 'បានចម្លង ✓'; } }
   else if (a === 'shSave') sheetSave(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
   else if (a === 'shLoad') sheetLoad(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
   else if (a === 'agKind'){ S.ui.agKind = b.dataset.v; save(); renderAgree(); }
