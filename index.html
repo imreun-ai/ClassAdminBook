@@ -530,8 +530,8 @@ function agTimeline(id, head, rows){
 <thead><tr><th>ល.រ</th><th>សកម្មភាព</th><th>${head[0]}</th><th>${head[1]}</th><th>ផ្សេងៗ</th></tr></thead><tbody>${rows.map((r, i) =>
 `<tr><td class="m">${r[0]}</td><td>${ed(id + '.a.' + i, r[1])}</td><td>${ed(id + '.f.' + i, r[2])}</td><td>${ed(id + '.t.' + i, r[3])}</td><td>${ed(id + '.o.' + i, r[4] || '')}</td></tr>`).join('')}</tbody></table>`;
 }
-function agActs(id, list){
-  return list.map((t, i) => `<ol class="act"><li><b>${toKh(i + 1)}</b><div>${ed(id + '.' + i, t)}</div></li></ol>`).join('<!--B-->');
+function agActs(id, list, start){
+  return list.map((t, i) => `<ol class="act"><li><b>${toKh(i + 1 + (start || 0))}</b><div>${ed(id + '.' + i, t)}</div></li></ol>`).join('<!--B-->');
 }
 function agStd1Table(c, nt, nf){
   const list = students(c), t = list.length, f = list.filter(s => s.sex === 'ស').length;
@@ -567,6 +567,7 @@ function agPaginate(blocks){
   return pages.length ? pages : ['<section class="sheet ag"><div class="agp"></div></section>'];
 }
 function agdoc(){
+  if (S.ui.agKind === 'homeroom') return agHR();
   const cl = classes();
   const [y1, y2] = agYears();
   const [tt, tf] = agCounts(cl);
@@ -666,6 +667,118 @@ ${dev('d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិញ
 <div class="c" style="margin-top:3mm">បានពិនិត្យ និងឯកភាព<br>${ed('f.d3', agLunar())}<br><span class="pu"><b>${ed('f.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('f.n3', '')}</div>
 `);
   return {pages: agPaginate(blocks), land:false, file:'work-agreement.html'};
+}
+
+/* ---------- Homeroom-teacher work agreement (editable) ---------- */
+const HR_SUBJ = ['ភាសាខ្មែរ','គណិតវិទ្យា','រូបវិទ្យា','គីមីវិទ្យា','ជីវៈវិទ្យា','ប្រវត្តិវិទ្យា','ភូមិវិទ្យា','ផែនដីវិទ្យា','សីលធម៌ ពលរដ្ឋ','ភាសាបរទេស'];
+function agHR(){
+  const c = innerCls(), list = c ? students(c) : [], t = list.length, f = list.filter(s => s.sex === 'ស').length;
+  const [y1, y2] = agYears();
+  const mf = S.s.monthFrom || 'វិច្ឆិកា', mt = S.s.monthTo || 'សីហា';
+  const kv = (l, v) => `<div class="kv"><b>${l}</b><i>៖</i><span>${v}</span></div>`;
+  const blocks = [];
+  const B = html => html.split('<!--B-->').forEach(x => blocks.push('<div class="blk">' + x + '</div>'));
+  const stdN = toKh(t) + '/' + toKh(f);
+  B(`
+<div class="moul" style="font-size:11pt">ព្រះរាជាណាចក្រកម្ពុជា</div><div class="moul" style="font-size:10pt">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+<div class="moul" style="font-size:12pt">កិច្ចព្រមព្រៀងលទ្ធផលការងារ<br>និងការអភិវឌ្ឍវិជ្ជាជីវៈប្រចាំឆ្នាំ</div>
+<div class="moul gr" style="font-size:12pt">${ed('h.title', 'របស់គ្រូបន្ទុកថ្នាក់')}</div>
+<div class="c" style="font-weight:700;margin:2mm 0 1mm">ពីខែ ${ed('h.d.from', mf)} ឆ្នាំ${ed('h.d.y1', y1)} ដល់ខែ ${ed('h.d.to', mt)} ឆ្នាំ${ed('h.d.y2', y2)}</div>
+<hr>
+${kv('ឈ្មោះសាលារៀន', ed('school', S.s.school))}${kv('ភូមិ', ed('village', 'កណ្តៀង'))}${kv('ឃុំ/សង្កាត់', ed('commune', 'កណ្តៀង'))}${kv('ក្រុង/ស្រុក', ed('district', 'កណ្តៀង'))}${kv('រាជធានី/ខេត្ត', ed('province', 'ពោធិ៍សាត់'))}
+<hr>
+${kv('ឈ្មោះគ្រូបន្ទុកថ្នាក់', '<b class="pu">' + ed('teacher', S.s.teacher) + '</b>')}
+${kv('ទទួលបន្ទុកថ្នាក់ទី', ed('h.cls', c ? khCls(c) : '') + ' <span class="rd">(ថ្នាក់សរុបចំនួន ' + ed('h.ncls', toKh(t)) + ')</span>')}
+${kv('ឋានៈមន្រ្តីរាជការ', ed('rank', 'គ្រូបង្រៀនកម្រិតមូលដ្ឋាន'))}${kv('ឋានៈវិជ្ជាជីវៈ', ed('prof', 'គ្មាន'))}${kv('ហត្ថលេខា', ed('h.sign0', ''))}
+<div style="margin:4mm 0 1mm" class="gr"><b>ធ្វើកិច្ចព្រមព្រៀងលទ្ធផលការងារ និងការអភិវឌ្ឍវិជ្ជាជីវៈប្រចាំឆ្នាំជាមួយ៖</b></div>
+<div class="pu" style="margin:3mm 0 .5mm"><b>${ed('r1', 'នាយករងបច្ចេកទេស / នាយកសាលា')}</b></div>
+${kv('ឈ្មោះ', ed('n1', 'សួស ម៉េងសៀ') + ' &nbsp;&nbsp;&nbsp;ភេទ៖ ' + ed('g1', 'ប្រុស'))}${kv('ថ្ងៃខែឆ្នាំ ឯកភាព', ed('h.dt1', ''))}${kv('ហត្ថលេខា', ed('h.sg1', ''))}
+<div style="height:14mm"></div>
+<div class="c bl" style="margin:2mm 0"><b>និង</b></div>
+<div class="pu" style="margin:3mm 0 .5mm"><b>${ed('r2', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></div>
+${kv('ឈ្មោះ', ed('n2', 'ជេដ្ធ សេងញិន') + ' &nbsp;&nbsp;&nbsp;ភេទ៖ ' + ed('g2', 'ប្រុស'))}${kv('ថ្ងៃខែឆ្នាំ ឯកភាព', ed('h.dt2', ''))}${kv('ហត្ថលេខា', ed('h.sg2', ''))}
+`);
+  /* standard 1: every subject, planned row from Settings percentage table */
+  const G = ['A','B','C','D','E','F'], plan = agPlan(t, f);
+  const head = `<thead><tr><th rowspan="2" style="width:30mm">ចំនួនសិស្សសរុប / ស្រី<br>ជាមួយនិទ្ទេសតាមមុខវិជ្ជា<br>(យកនិទ្ទេសទាបជាគោល)</th><th colspan="6">និទ្ទេស</th><th rowspan="2" style="width:22mm">ផ្សេងៗ</th></tr><tr>${G.map(x => `<th>${x}</th>`).join('')}</tr></thead>`;
+  const subjTbl = (s, i, withHead) => `<table><colgroup><col style="width:30mm">${'<col>'.repeat(6)}<col style="width:22mm"></colgroup>${withHead ? head : ''}<tbody>
+<tr><td class="cl" colspan="7">មុខវិជ្ជា ${ed('h.s1.' + i + '.n', s)}</td><td rowspan="4">${ed('h.s1.' + i + '.o', '')}</td></tr>` +
+    ['ដើមឆ្នាំ','គ្រោងចុងឆ្នាំ','សម្រេចចុងឆ្នាំ'].map((r, ri) => `<tr><td>${r}</td>${G.map((x, ci) => `<td class="m">${ed('h.s1.' + i + '.' + ri + '.' + ci, ri === 1 ? plan[ci] : '')}</td>`).join('')}</tr>`).join('') + `</tbody></table>`;
+  B(`<h4 class="rd" style="margin-top:3mm">ស្តង់ដាទី១៖ លទ្ធផលសិក្សារបស់សិស្ស</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី១៖ លទ្ធផលសិក្សារបស់សិស្សកើនឡើង</h5>` + subjTbl(HR_SUBJ[0], 0, true));
+  HR_SUBJ.slice(1).forEach((s, i) => B(subjTbl(s, i + 1, false)));
+  B(`
+<h5 class="rd">សកម្មភាព</h5><div class="c bl"><b>${ed('h.a1.t', 'សិស្សមានកាលវិភាគរៀន និងជួយកិច្ចការផ្ទះពេញមួយថ្ងៃ')}</b></div>${agActs('h.a1', [
+  'ជួយគ្រូបន្ទុកថ្នាក់ ជួយសិស្សម្នាក់ៗក្នុងថ្នាក់ ធ្វើកាលវិភាគរៀន និងជួយកិច្ចការផ្ទះពេញមួយថ្ងៃប្រចាំសប្តាហ៍ ដើម្បីធានាសម្រេចបានលទ្ធផលសិក្សាតាមការគ្រោងទុក',
+  'ជួយគ្រូបន្ទុកថ្នាក់មានបញ្ជីឈ្មោះសិស្ស បានធ្វើកាលវិភាគរៀន និងជួយកិច្ចការផ្ទះពេញមួយថ្ងៃប្រចាំសប្តាហ៍ និងបានពិនិត្យឡើងវិញប្រចាំខែ'])}
+<!--B--><h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
+${agTimeline('h.t1', ['ពីខែ', 'ដល់ខែ'], [
+  ['១', 'ប្រជុំជាមួយគ្រូបន្ទុកថ្នាក់ ពិភាក្សាអំពីគំរូកាលវិភាគសិស្ស និងដំណើរការជួយសិស្សធ្វើកាលវិភាគ និងពិនិត្យឡើងវិញប្រចាំខែ', mf + y1, mt + y2],
+  ['២', 'ពិនិត្យភ័ស្តុតាង (ក) ដោយឱ្យសិស្សបង្ហាញកាលវិភាគរៀន និងជួយកិច្ចការក្នុងគ្រួសារ និង (ខ) ពិនិត្យបញ្ជីឈ្មោះសិស្ស ដែលគ្រូបន្ទុកថ្នាក់បានឱ្យសិស្សពិនិត្យឡើងវិញតាមខែនីមួយៗ', 'ធ្នូ' + y1, mt + y2]])}
+`);
+  /* standard 2 */
+  B(`<h4 class="rd" style="margin-top:2mm">ស្តង់ដាទី២៖ ដំណើរការបង្រៀន និងរៀន</h4><h5 class="bl">លទ្ធផលរំពឹងទុកទី២៖ ប្រសិទ្ធភាពគ្រប់គ្រងលទ្ធផលបង្រៀនមានការប្រែប្រួល</h5>
+<table><colgroup><col style="width:16mm"><col><col><col><col><col style="width:18mm"></colgroup>
+<thead><tr><th rowspan="2"></th><th colspan="3">តេស្តស្តង់ដាម៉តចត់</th><th>ផែនការរៀនសូត្រឆ្នាំរបស់សិស្ស</th><th rowspan="2">ផ្សេងៗ</th></tr><tr><th></th><th></th><th></th><th></th></tr></thead>
+<tbody><tr><td class="m"><b>គ្រោង</b></td>
+<td>${ed('h.s2.p.0', 'មានបញ្ជីនិទ្ទេសលទ្ធផលតេស្តស្តង់ដា (ABCDE និងF) និង (កម្រិតABC និងDEF) សិស្សម្នាក់ៗ តាមថ្នាក់')}</td>
+<td>${ed('h.s2.p.1', 'មានតារាងកត់ត្រាលទ្ធផលសិក្សាសិស្សរៀនយឺត (សមត្ថភាព E និងF) ប្រៀបធៀបរវាងតេស្តដើមឆ្នាំ ជាមួយតេស្តតាមកាល រហូតចុងឆ្នាំ')}</td>
+<td>${ed('h.s2.p.2', 'មានកត់ត្រាឈ្មោះសិស្ស និងអ្នកអាណាព្យាបាលសិស្សរៀនយឺត ដែលគ្រូបានពិគ្រោះជាមួយតាមខែនីមួយៗ')}</td>
+<td>${ed('h.s2.p.3', 'មានផែនការរៀនសូត្រឆ្នាំ ដែលអាណាព្យាបាលសិស្សចុះហត្ថលេខា ឬស្នាមមេដៃដឹងឮ និងគាំទ្រ')}</td><td>${ed('h.s2.p.4', '')}</td></tr>
+<tr><td class="m"><b>សម្រេច</b></td><td class="m">${ed('h.s2.r.0', 'មាន')}</td><td class="m">${ed('h.s2.r.1', 'មាន')}</td><td class="m">${ed('h.s2.r.2', 'មាន')}</td><td class="m">${ed('h.s2.r.3', 'មាន')}</td><td>${ed('h.s2.r.4', '')}</td></tr></tbody></table>
+<!--B--><h5 class="rd">សកម្មភាព</h5><div class="bl"><b>${ed('h.a2.t1', 'តេស្តស្តង់ដាម៉តចត់')}</b></div>${agActs('h.a2', [
+  'ជួយគ្រូបន្ទុកថ្នាក់ និងមុខវិជ្ជាអំពីការធ្វើបច្ចុប្បន្នភាព៖ បញ្ជីនិទ្ទេសលទ្ធផលតេស្តស្តង់ដា (ABCDE និងF) និង (កម្រិតABC និងDEF) សិស្សម្នាក់ៗ តាមថ្នាក់',
+  'ជួយគ្រូបន្ទុកថ្នាក់ និងមុខវិជ្ជាអំពីការធ្វើបច្ចុប្បន្នភាព៖ តារាងកត់ត្រាលទ្ធផលសិក្សាសិស្សរៀនយឺត (សមត្ថភាព E និងF) ប្រៀបធៀបរវាងតេស្តដើមឆ្នាំ ជាមួយតេស្តតាមកាល រហូតចុងឆ្នាំ',
+  'ជួយគ្រូបន្ទុកថ្នាក់ និងមុខវិជ្ជាអំពីការធ្វើបច្ចុប្បន្នភាព៖ តារាងកត់ត្រាឈ្មោះសិស្ស និងអ្នកអាណាព្យាបាលសិស្សរៀនយឺត ដែលគ្រូបានពិគ្រោះជាមួយតាមខែនីមួយៗ'])}
+<!--B--><div class="bl"><b>${ed('h.a2.t2', 'ផែនការរៀនសូត្រឆ្នាំរបស់សិស្ស')}</b></div>${agActs('h.a2b', ['ជួយគ្រូបន្ទុកថ្នាក់ និងមុខវិជ្ជាអំពីការធ្វើបច្ចុប្បន្នភាព៖ បញ្ជី / តារាងកត់ត្រាការអនុវត្តកិច្ចការ ផែនការរៀនសូត្រឆ្នាំរបស់សិស្ស'])}
+<!--B--><h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
+${agTimeline('h.t2', ['ពីខែ', 'ដល់ខែ'], [
+  ['១', 'ប្រជុំជាមួយគ្រូបន្ទុកថ្នាក់ និងគ្រូមុខវិជ្ជាទាំងអស់ ក្នុងកម្រិតថ្នាក់ជាមួយគ្នា អំពី៖ (ក) គោលបំណង និងខ្លឹមសាររបស់បញ្ជី និងតារាងទាំង៤ ខាងលើ (ខ) ការប្រើប្រាស់បញ្ជី និងតារាងទាំង៤ខាងលើ', mf + y1, mt + y2],
+  ['២', 'ប្រជុំប្រចាំខែ ឱ្យគ្រូម្នាក់ៗបង្ហាញពីការកត់ត្រា និងប្រើប្រាស់បញ្ជី និងតារាងទាំង៤ខាងលើ និងពិគ្រោះគ្នាបន្ថែមដើម្បីអនុវត្តកិច្ចការឱ្យមានប្រសិទ្ធភាពខ្ពស់', 'ធ្នូ' + y1, mt + y2]])}
+`);
+  /* expected result 3 */
+  B(`<h5 class="bl" style="margin-top:2mm">លទ្ធផលរំពឹងទុកទី៣៖ ប្រសិទ្ធភាពគ្រប់គ្រងទិន្នន័យរដ្ឋបាលថ្នាក់រៀន</h5>
+<table><colgroup><col style="width:16mm"><col><col><col><col><col style="width:18mm"></colgroup>
+<thead><tr><th></th><th colspan="2">ការគ្រប់គ្រងទិន្នន័យរដ្ឋបាលថ្នាក់រៀន របស់ក្រុមប្រឹក្សាសិស្សថ្នាក់រៀន</th><th colspan="2">ការគ្រប់គ្រងទិន្នន័យរដ្ឋបាលសាលារៀន របស់ក្រុមប្រឹក្សាសិស្សសាលារៀន</th><th>ផ្សេងៗ</th></tr></thead>
+<tbody><tr><td class="m"><b>គ្រោង</b></td>
+<td>${ed('h.s3.p.0', 'សិស្សចាប់ឆ្នោតសម្រាប់ចងក្រងជាក្រុមតូចៗចំនួន (១៥បូក៥) ដើម្បីកត់ត្រាទិន្នន័យរដ្ឋបាលថ្នាក់រៀនជាប្រចាំ ផ្តល់ឱ្យក្រុមប្រឹក្សាសិស្សសាលារៀន រៀងរាល់ចុងខែ')}</td>
+<td>${ed('h.s3.p.1', 'បោះឆ្នោតជ្រើសរើសក្រុមប្រឹក្សាសិស្សថ្នាក់រៀន')}</td>
+<td>${ed('h.s3.p.2', 'បោះឆ្នោតជ្រើសរើសក្រុមប្រឹក្សាសិស្សសាលារៀន')}</td>
+<td>${ed('h.s3.p.3', 'ក្រុមប្រឹក្សាសិស្សសាលារៀនប្រមូលទិន្នន័យគ្រប់គ្រងរដ្ឋបាលថ្នាក់រៀន ពីក្រុមប្រឹក្សាសិស្សថ្នាក់រៀននៅចុងខែ សម្រាប់សរុបបានទិន្នន័យគ្រប់គ្រងរដ្ឋបាលកម្រិតសាលារៀន')}</td>
+<td>${ed('h.s3.p.4', 'ក្រុមប្រឹក្សាសិស្សសាលារៀនផ្តល់ទិន្នន័យគ្រប់គ្រងរដ្ឋបាលសាលារៀន ជូននាយករងរដ្ឋបាល ឬគ្រូដឹកនាំក្រុមប្រឹក្សាសិស្សសាលារៀន')}</td></tr>
+<tr><td class="m"><b>សម្រេច</b></td><td class="m">${ed('h.s3.r.0', 'បាន')}</td><td class="m">${ed('h.s3.r.1', 'បាន')}</td><td class="m">${ed('h.s3.r.2', 'បាន')}</td><td class="m">${ed('h.s3.r.3', 'បាន')}</td><td>${ed('h.s3.r.4', '')}</td></tr></tbody></table>
+<!--B--><h5 class="rd">សកម្មភាព</h5><div class="bl"><b>${ed('h.a3.t1', 'ការគ្រប់គ្រងទិន្នន័យរដ្ឋបាលថ្នាក់រៀន របស់ក្រុមប្រឹក្សាសិស្សថ្នាក់រៀន')}</b></div>${agActs('h.a3', [
+  'ជួយគ្រូបន្ទុកថ្នាក់ឱ្យសិស្សចាប់ឆ្នោតចងក្រងក្រុមតូចៗចំនួន (១៥បូក៥) ដើម្បីទទួលបន្ទុកកត់ត្រាទិន្ន័យគ្រប់គ្រងរដ្ឋបាលថ្នាក់រៀនជាប្រចាំ សម្រាប់សរុបប្រចាំខែផ្ញើជូនគ្រូបន្ទុកថ្នាក់ គគថ និងក្រុមប្រឹក្សាសិស្សសាលារៀន',
+  'ជួយគ្រូបន្ទុកថ្នាក់បោះឆ្នោតជ្រើសរើស ក្រុមប្រឹក្សាសិស្សថ្នាក់រៀន ផ្តោតជួយសិស្សរៀនយឺត និងសិស្សមកពីគ្រួសារជួបការលំបាក'])}
+<!--B--><div class="bl"><b>${ed('h.a3.t2', 'ការគ្រប់គ្រងទិន្នន័យរដ្ឋបាលសាលារៀន របស់ក្រុមប្រឹក្សាសិស្សសាលារៀន')}</b></div>${agActs('h.a3b', [
+  'ចូលរួមជាមួយនាយករងរដ្ឋបាល បោះឆ្នោតជ្រើសរើសក្រុមប្រឹក្សាសិស្សសាលារៀន ផ្តោតជួយសិស្សមកពីគ្រួសារជួបការលំបាក',
+  'ចូលរួមជាមួយនាយករងរដ្ឋបាល ជួយក្រុមប្រឹក្សាសិស្សសាលារៀនប្រមូលទិន្នន័យរដ្ឋបាលពីថ្នាក់រៀននៅចុងខែ ដើម្បីសរុបទិន្នន័យរដ្ឋបាលគ្រប់គ្រងកម្រិតសាលារៀន',
+  'ចូលរួមជាមួយនាយករងរដ្ឋបាល ជួយក្រុមប្រឹក្សាសិស្សសាលារៀនរាយការណ៍ទិន្នន័យគ្រប់គ្រងរដ្ឋបាលសាលារៀន ទៅនាយកសាលាសម្រាប់ប្រើពេលប្រជុំពិនិត្យតាមដានប្រចាំខែ និងត្រីមាស (ក) ដើម្បីអន្តរាគមន៍ជួយដល់សិស្សរៀនយឺត (ដែលត្រូវការជួយជាបន្ទាន់ក្នុងខែ) (ខ) ដើម្បីអន្តរាគមន៍ជួយសិស្សមកពីគ្រួសារជួបការលំបាក (ដែលត្រូវការជួយជាបន្ទាន់ក្នុងខែ) (គ) ដើម្បីអន្តរាគមន៍ជួយដល់គ្រូជួបការលំបាក (ដែលត្រូវការជួយជាបន្ទាន់ក្នុងខែ)'], 3)}
+<!--B--><h5 class="rd">តារាងពេលវេលាសម្រេចសកម្មភាព</h5>
+${agTimeline('h.t3', ['ពីខែ', 'ដល់ខែ'], [
+  ['១', 'ប្រជុំជាមួយគ្រូបន្ទុកថ្នាក់ និងគ្រូមុខវិជ្ជាទាំងអស់ ក្នុងកម្រិតថ្នាក់ អំពីគោលបំណង សារៈប្រយោជន៍ និងសកម្មភាពសំខាន់ៗ របស់គ្រូបន្ទុកថ្នាក់ ក្នុងការជួយសិស្សឱ្យមានភាពម្ចាស់ការ ក្នុងការគ្រប់គ្រងទិន្នន័យរដ្ឋបាលថ្នាក់រៀន និងចូលរួមដោះស្រាយបញ្ហាបានទាន់ពេល', 'លើកទី១ នៅដើមឆ្នាំសិក្សា', 'លើកទី២ នៅពាក់កណ្តាលឆ្នាំសិក្សា'],
+  ['២', 'ពិនិត្យលទ្ធផលតាមថ្នាក់រៀនដោយធ្វើសកម្មភាព៖ (ក) សំភាសន៍សិស្ស (ខ) សង្កេតសកម្មភាពសិស្ស (គ) ពិគ្រោះជាមួយគ្រូ និងផ្ទៀងផ្ទាត់ជាមួយភ័ស្តុតាង', mf + y1, mt + y2]])}
+`);
+  /* professional development */
+  const dev = (id, t1, acts, rows) => `<h5 class="bl">${t1}</h5><h5 class="rd" style="margin-top:0">សកម្មភាព</h5>${agActs(id, acts)}<!--B--><table><colgroup><col style="width:8mm"><col><col style="width:26mm"><col style="width:26mm"><col style="width:20mm"></colgroup><thead><tr><th>ល.រ</th><th>សកម្មភាព</th><th>ចាប់ពីពេលណា</th><th>ដល់ពេលណា</th><th>ផ្សេងៗ</th></tr></thead><tbody>${rows.map((r, i) =>
+    `<tr><td class="m">${toKh(i + 1)}</td><td>${ed(id + 't.a.' + i, r)}</td><td>${ed(id + 't.f.' + i, '')}</td><td>${ed(id + 't.t.' + i, '')}</td><td>${ed(id + 't.o.' + i, '')}</td></tr>`).join('')}</tbody></table>`;
+  B(`<h4 class="rd" style="margin-top:2mm">វត្ថុបំណងអភិវឌ្ឍវិជ្ជាជីវៈគ្រូបង្រៀន / គណៈគ្រប់គ្រង</h4>
+${dev('h.d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិញ្ញាបត្រ បង្កើនគុណវុឌ្ឍិគ្រូបង្រៀន', [
+  'ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន ឬរៀនជាអ្នកស្ម័គ្រចិត្ត (បរិញ្ញាបត្រ)',
+  'ពិគ្រោះយោបល់ជាមួយអ្នករៀនក្នុងកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន សម្រាប់យកមកអនុវត្តសាកល្បងជាក់ស្តែងនៅតាមថ្នាក់រៀន',
+  'ដឹកនាំប្រជុំបច្ចេកទេសប្រចាំខែ ជាមួយគ្រូមុខវិជ្ជា និងគ្រូបន្ទុកថ្នាក់ទាំងអស់ ក្នុងកម្រិតថ្នាក់ អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី» ដើម្បីកែលម្អរបៀបធ្វើកិច្ចការឱ្យកាន់តែប្រសើរឡើង'
+], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាថ្នាក់រៀនជាប់ពិន្ទុស្តង់ដាទី២'])}
+<!--B-->${dev('h.d2', 'លទ្ធផលរំពឹងទុកទី២៖ បរិញ្ញាបត្រជាន់ខ្ពស់ បង្កើនគុណវុឌ្ឍិគ្រូបង្រៀន', [
+  'ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន ឬរៀនជាអ្នកស្ម័គ្រចិត្ត (បរិញ្ញាបត្រជាន់ខ្ពស់)',
+  'ពិគ្រោះយោបល់ជាមួយអ្នករៀនក្នុងកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន សម្រាប់យកមកអនុវត្តសាកល្បងជាក់ស្តែងនៅតាមថ្នាក់រៀន',
+  'ដឹកនាំប្រជុំបច្ចេកទេសប្រចាំខែ ជាមួយគ្រូមុខវិជ្ជា និងគ្រូបន្ទុកថ្នាក់ទាំងអស់ ក្នុងកម្រិតថ្នាក់ អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី» ដើម្បីកែលម្អរបៀបធ្វើកិច្ចការឱ្យកាន់តែប្រសើរឡើង'
+], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាសាលារៀនជាប់ពិន្ទុស្តង់ដាទី២'])}
+<!--B--><div class="sigs">
+ <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('hf.d1', agLunar())}<br>${ed('hf.p1', agSolar('ធ្វើនៅសាលា '))}</div><div class="pu" style="margin-top:2mm"><b>${ed('hf.r1', 'នាយករងបច្ចេកទេស')}</b></div><div style="height:16mm"></div><div>${ed('hf.n1', '')}</div></div>
+ <div><div>${ed('hf.d2', agLunar())}<br>${ed('hf.p2', ed_ph())}</div><div class="pu" style="margin-top:2mm"><b>${ed('hf.r2', 'គ្រូបន្ទុកថ្នាក់')}</b></div><div style="height:16mm"></div><div>${ed('hf.n2', S.s.teacher)}</div></div>
+</div>
+<div class="c" style="margin-top:3mm">បានឃើញ និងឯកភាព<br>${ed('hf.d3', agLunar())}<br>${ed('hf.p3', agSolar('ធ្វើនៅសាលា '))}<br><span class="pu"><b>${ed('hf.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('hf.n3', '')}</div>
+`);
+  return {pages: agPaginate(blocks), land:false, file:'work-agreement-homeroom.html'};
 }
 function agLunar(){ const k = khDates(S.s.agrDate); return k ? k.lunar : 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....'; }
 function agSolar(pre){ const k = khDates(S.s.agrDate); return k ? pre + k.solar : pre + 'ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'; }
@@ -771,7 +884,8 @@ function zipJobs(sel){
     jobs.push({path:'២-ក្របខាងក្នុង/' + (i+1) + '-' + safeName(t) + (c ? ' ' + safeName(c) : '') + '.pdf', get:() => withUi({inner:t}, () => pagesFor('inner'))});
   });
   if (sel.print){
-    ['meeting','tech','agreement'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k}, () => pagesFor('print'))}));
+    ['meeting','tech','agreement'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k, agKind:'subject'}, () => pagesFor('print'))}));
+    jobs.push({path:'៣-ឯកសារព្រីន/កិច្ចព្រមព្រៀងការងារគ្រូបន្ទុកថ្នាក់.pdf', get:() => withUi({agKind:'homeroom'}, () => pagesFor('agree'))});
     ['extract','absence','scores','slow'].forEach(k => cl.forEach(c => jobs.push({path:'៣-ឯកសារព្រីន/ថ្នាក់ ' + safeName(c) + '/' + safeName(KINDS[k].label) + ' ' + safeName(c) + '.pdf', get:() => withUi({kind:k, cls:c}, () => pagesFor('print'))})));
   }
   return jobs;
@@ -1053,9 +1167,10 @@ ${k.editable?`<p class="help" style="margin-top:0">ចុចលើអក្ស�
   updatePreview();
 }
 function renderAgree(){
-  $('#app').innerHTML = `<div class="split"><div class="card"><h2>កិច្ចព្រមព្រៀងការងារគ្រូមុខវិជ្ជា</h2>
+  $('#app').innerHTML = `<div class="split"><div class="card"><h2>កិច្ចព្រមព្រៀងការងារ</h2>
 <p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
 <p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
+<div class="field"><label for="agKind">ប្រភេទកិច្ចព្រមព្រៀង</label><select id="agKind" data-ui="agKind"><option value="subject" ${S.ui.agKind!=='homeroom'?'selected':''}>កិច្ចព្រមព្រៀងគ្រូមុខវិជ្ជា</option><option value="homeroom" ${S.ui.agKind==='homeroom'?'selected':''}>កិច្ចព្រមព្រៀងគ្រូបន្ទុកថ្នាក់ (ថ្នាក់បន្ទុកក្នុងការកំណត់)</option></select></div>
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
@@ -1099,7 +1214,7 @@ document.addEventListener('input', e => {
   }
   if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); return; }
   if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
-  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
+  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3'], monthFrom:['d.from','h.d.from'], monthTo:['d.to','h.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
   else if (t.dataset.mlist){ S.ui.monthsBy = S.ui.monthsBy || {}; S.ui.monthsBy[t.dataset.mlist] = t.value; save(); updatePreview(); }
   else if (t.dataset.title){ S.ui.titles[t.dataset.title] = t.value; save(); updatePreview(); }
   else if (t.dataset.ui === 'month'){ S.ui.month = t.value; save(); updatePreview(); }
