@@ -232,7 +232,7 @@ const DEFAULT = {
 };
 let S = JSON.parse(JSON.stringify(DEFAULT));
 try{
-  const raw = localStorage.getItem(KEY);
+  const raw = localStorage.getItem(KEY); window.__hadLS = !!raw;
   if (raw){ const p = JSON.parse(raw); S = {s:{...DEFAULT.s,...p.s}, students:p.students||{}, agr:p.agr||{}, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...p.ui}}; }
 }catch(e){}
 const PLAN_DEF = {year:1, pct:[[2,5,10,10,23,50],[4,6,14,20,26,30],[8,15,17,30,20,10],[12,20,20,38,10,0],[16,25,25,29,5,0],[20,30,30,20,0,0]]};
@@ -259,7 +259,22 @@ function agPlan(t, f){
   const tot = splitCounts(t, S.s.plan.pct[planYear() - 1]), fem = splitCounts(f, tot);
   return tot.map((n, i) => n ? n + '/' + fem[i] : '0');
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+let saveErr = false, savedAt = 0, idbTimer = 0, idbReady = false;
+function idbOpen(){ return new Promise((res, rej) => { try{ const r = indexedDB.open('sovphov-radthabal', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } }); }
+function idbPut(v){ return idbOpen().then(db => new Promise(res => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, KEY); t.oncomplete = () => res(true); t.onerror = () => res(false); })).catch(() => false); }
+function idbGet(){ return idbOpen().then(db => new Promise(res => { const q = db.transaction('kv').objectStore('kv').get(KEY); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); })).catch(() => null); }
+function save(){
+  let json = ''; try{ json = JSON.stringify(S); }catch(e){ return; }
+  try{ localStorage.setItem(KEY, json); saveErr = false; savedAt = Date.now(); }catch(e){ saveErr = true; }
+  clearTimeout(idbTimer); if (idbReady) idbTimer = setTimeout(() => idbPut(json).then(ok => { if (ok){ savedAt = Date.now(); } storeStatus(); }), 400); // second copy in IndexedDB
+  storeStatus();
+}
+function storeStatus(){
+  const el = document.getElementById('storeStat'); if (!el) return;
+  const kb = Math.round(JSON.stringify(S).length / 1024);
+  el.innerHTML = saveErr ? '<b style="color:var(--danger)">⚠ ការរក្សាទុកក្នុងម៉ាស៊ីនបរាជ័យ (ទំហំពេញ ឬបិទការរក្សាទុក)។ សូមទាញយកបម្រុងទុក (.json)។</b>'
+    : '✓ ទិន្នន័យទាំងអស់ (' + kb + ' KB) ត្រូវបានរក្សាទុកក្នុងម៉ាស៊ីននេះដោយស្វ័យប្រវត្តិ' + (savedAt ? ' · ' + fmtTime(savedAt) : '') + (window.__persist === true ? ' · ការពារមិនឱ្យលុបដោយស្វ័យប្រវត្តិ' : '');
+}
 const classes = () => sortClasses(S.s.classes);
 
 /* ---------- document CSS (shared by the live preview and the downloaded file) ---------- */
@@ -1054,6 +1069,85 @@ async function syncSheet(){
   }
 }
 
+
+/* ---------- save / load agreement edits in the connected Google Sheet (by teacher name) ---------- */
+const AGTAB = {subject:'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom:'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};
+const AGHEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];
+const AGCHUNK = 40000, AGCOLS = 4;
+let sheetBusy = false, sheetTimer = 0; const tabReady = {};
+const agKindOf = k => /^hf?\./.test(k) ? 'homeroom' : 'subject';
+function agKindData(kind){ const o = {}; Object.keys(S.agr).forEach(k => { if (agKindOf(k) === kind) o[k] = S.agr[k]; }); return o; }
+function shMsg(t, err){ const el = document.getElementById('sheetMsg'); if (el){ el.textContent = t; el.className = err ? 'msg err' : 'muted'; } }
+function shErr(e){
+  const c = e && e.code;
+  if (c === 'not_in_manifest') return 'មិនទាន់អនុញ្ញាត Google Sheets សម្រាប់ការសរសេរ។ សូមផ្ទុកទំព័រឡើងវិញ ហើយចុច Allow ពេលសួរ។ (បើទើបតែធ្វើបច្ចុប្បន្នភាព App ត្រូវអនុញ្ញាតថ្មី)';
+  if (c === 'tool_error') return 'Google Sheets រាយការណ៍កំហុស៖ ' + String((e && e.message) || '').slice(0, 160) + ' (ពិនិត្យថាអ្នកមានសិទ្ធិកែ Sheet នេះ)';
+  if (c === 'server_unavailable' || c === 'upstream_error') return 'មិនប្រាកដថាបានរក្សាទុកឬអត់ (ការតភ្ជាប់មានបញ្ហា)។ សូមចុចទាញពី Sheet ដើម្បីពិនិត្យ ឬរក្សាទុកម្តងទៀត។';
+  return errText(e);
+}
+async function shEnsureTab(kind){
+  if (tabReady[kind]) return;
+  const tab = AGTAB[kind];
+  let created = false;
+  try{ await MCP.callTool(SHEETSRV, 'update_spreadsheet', {spreadsheetId: sheetId(), requests: [{addSheet: {properties: {title: tab}}}]}, {cache:false}); created = true; }
+  catch(e){ if (!(e && e.code === 'tool_error')) throw e; /* tab already exists */ }
+  if (created) await MCP.callTool(SHEETSRV, 'update_values', {spreadsheetId: sheetId(), range: `'${tab}'!A1:G1`, values: [AGHEAD]}, {cache:false});
+  tabReady[kind] = true;
+}
+async function shFindRow(kind){
+  const tab = AGTAB[kind];
+  const r = await MCP.callTool(SHEETSRV, 'get_values', {spreadsheetId: sheetId(), range: `'${tab}'!A2:G3000`}, {cache:false});
+  let p = r.payload; if (typeof p === 'string'){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
+  const rows = (p && (p.values || (p.valueRange && p.valueRange.values))) || [];
+  const key = keyName(S.s.teacher); let idx = -1;
+  rows.forEach((row, i) => { if (idx < 0 && keyName(row[0] || '') === key) idx = i; });
+  return {rows, idx};
+}
+function shReady(){
+  if (!MCP) { shMsg('មុខងារនេះប្រើបានតែពេលបើក App ក្នុង claude.ai (ភ្ជាប់ Google Sheets)។', true); return false; }
+  if (!sheetId()){ shMsg('តំណ Google Sheet មិនត្រឹមត្រូវ។', true); return false; }
+  if (!S.s.teacher){ shMsg('សូមជ្រើសឈ្មោះគ្រូក្នុង «១. ការកំណត់» ជាមុន។', true); return false; }
+  if (sheetBusy){ shMsg('កំពុងដំណើរការ… សូមរង់ចាំ។', false); return false; }
+  return true;
+}
+async function sheetSave(kind, quiet){
+  if (!shReady()) return;
+  sheetBusy = true; shMsg('កំពុងរក្សាទុកទៅ Google Sheet…', false);
+  try{
+    const json = JSON.stringify(agKindData(kind));
+    if (json.length > AGCHUNK * AGCOLS){ shMsg('ទិន្នន័យធំពេក មិនអាចរក្សាទុកក្នុង Sheet។ សូមទាញយកបម្រុងទុក (.json)។', true); return; }
+    const chunks = []; for (let i = 0; i < AGCOLS; i++) chunks.push(json.slice(i * AGCHUNK, (i + 1) * AGCHUNK));
+    await shEnsureTab(kind);
+    const {rows, idx} = await shFindRow(kind);
+    const rowNo = (idx >= 0 ? idx : rows.length) + 2;
+    const desc = kind === 'homeroom' ? 'ថ្នាក់បន្ទុក ' + (S.s.homeroom || '') : (S.s.subject || '') + ' · ថ្នាក់ ' + (S.s.classes || []).join(', ');
+    const stamp = new Date().toLocaleString('km-KH', {dateStyle:'medium', timeStyle:'short'});
+    await MCP.callTool(SHEETSRV, 'update_values', {spreadsheetId: sheetId(), range: `'${AGTAB[kind]}'!A${rowNo}:G${rowNo}`, values: [[S.s.teacher, desc, stamp, ...chunks]]}, {cache:false});
+    shMsg('✓ បានរក្សាទុក «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» (ជួរទី ' + rowNo + ') · ' + stamp, false);
+  }catch(e){ shMsg(shErr(e), true); }
+  finally{ sheetBusy = false; }
+}
+async function sheetLoad(kind){
+  if (!shReady()) return;
+  sheetBusy = true; shMsg('កំពុងទាញពី Google Sheet…', false);
+  try{
+    const {rows, idx} = await shFindRow(kind);
+    if (idx < 0){ shMsg('មិនទាន់មានទិន្នន័យរបស់ «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» ទេ។', true); return; }
+    const json = rows[idx].slice(3, 3 + AGCOLS).join('');
+    const d = JSON.parse(json || '{}');
+    Object.keys(S.agr).forEach(k => { if (agKindOf(k) === kind) delete S.agr[k]; });
+    Object.keys(d).forEach(k => { if (agKindOf(k) === kind) S.agr[k] = String(d[k]); });
+    save(); renderAgree();
+    shMsg('✓ បានទាញការកែរបស់ «' + S.s.teacher + '» ពីផ្ទាំង «' + AGTAB[kind] + '» · ' + (rows[idx][2] || ''), false);
+  }catch(e){ shMsg(e instanceof SyntaxError ? 'ទិន្នន័យក្នុង Sheet ខូច មិនអាចអានបាន។' : shErr(e), true); }
+  finally{ sheetBusy = false; }
+}
+function sheetDirty(k){
+  if (!S.ui.autoSheet || !MCP || !S.s.teacher) return;
+  const kind = agKindOf(k); clearTimeout(sheetTimer);
+  sheetTimer = setTimeout(() => { if (sheetBusy) sheetDirty(k); else sheetSave(kind, true); }, 5000);
+}
+
 /* ---------- teachers ---------- */
 function teacherNames(){
   const seen = new Set(), out = [];
@@ -1107,7 +1201,8 @@ ${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២�
 <div class="field"><label for="agrDate">កាលបរិច្ឆេទកិច្ចព្រមព្រៀង (ថ្ងៃ/ខែ/ឆ្នាំ ឧ. 25/11/2026)</label><input id="agrDate" type="text" inputmode="numeric" data-set="agrDate" value="${esc(S.s.agrDate||'')}" placeholder="25/11/2026" autocomplete="off"><div class="help" id="agrDatePrev" aria-live="polite">${agrPrev()}</div></div>
 </div>
 <div class="card"><h2>បម្រុងទុកទិន្នន័យ</h2>
-<p class="help" style="margin-top:0">ការកំណត់រក្សាទុកក្នុងកម្មវិធីរុករកនេះ។ ទាញយកឯកសារបម្រុងទុក ដើម្បីប្តូរឧបករណ៍។</p>
+<p class="help" style="margin-top:0">ទិន្នន័យទាំងអស់ (ការកំណត់ សិស្ស ការកែក្នុងកិច្ចព្រមព្រៀង) រក្សាទុកក្នុងកម្មវិធីរុករកនៃម៉ាស៊ីននេះ។ ដើម្បីប្តូរម៉ាស៊ីន ឬឧបករណ៍ សូមទាញយកឯកសារបម្រុងទុក រួចស្តារនៅម៉ាស៊ីនថ្មី។</p>
+<p class="help" id="storeStat" aria-live="polite"></p>
 <div class="inline" style="margin-top:10px"><button class="btn" data-act="export">ទាញយកបម្រុងទុក (.json)</button><input type="file" id="importFile" accept=".json,application/json" hidden><button class="btn" data-act="import">ស្តារពីឯកសារ</button></div></div>
 </div><div>
 <div class="card"><h2>គ្រូបង្រៀន</h2>
@@ -1184,6 +1279,7 @@ function renderAgree(){
 <p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
 <p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
 <div class="field"><label>ជ្រើសប្រភេទកិច្ចព្រមព្រៀង</label><div class="inline"><button type="button" class="btn ${S.ui.agKind!=='homeroom'?'pri':''}" data-act="agKind" data-v="subject" aria-pressed="${S.ui.agKind!=='homeroom'}">គ្រូមុខវិជ្ជា</button><button type="button" class="btn ${S.ui.agKind==='homeroom'?'pri':''}" data-act="agKind" data-v="homeroom" aria-pressed="${S.ui.agKind==='homeroom'}">គ្រូបន្ទុកថ្នាក់</button></div><div class="help">ឯកសារគ្រូបន្ទុកថ្នាក់ប្រើថ្នាក់បន្ទុកក្នុង «១. ការកំណត់»</div></div>
+<div class="field"><label>រក្សាទុកការកែក្នុង Google Sheet (តាមឈ្មោះគ្រូ៖ ${esc(S.s.teacher || '—')})</label><div class="inline"><button type="button" class="btn" data-act="shSave" ${MCP ? '' : 'disabled'}>រក្សាទុកទៅ Sheet (${S.ui.agKind === 'homeroom' ? 'គ្រូបន្ទុកថ្នាក់' : 'គ្រូមុខវិជ្ជា'})</button><button type="button" class="btn" data-act="shLoad" ${MCP ? '' : 'disabled'}>ទាញពី Sheet</button></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" id="autoSheet" ${S.ui.autoSheet ? 'checked' : ''} ${MCP ? '' : 'disabled'}> រក្សាទុកស្វ័យប្រវត្តិក្រោយកែ</label><div class="muted" id="sheetMsg" aria-live="polite" style="margin:6px 0 0">${MCP ? 'រក្សាទុកក្នុងផ្ទាំង «' + AGTAB[S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject'] + '» (បង្កើតដោយស្វ័យប្រវត្តិ)។' : 'ប្រើបានតែពេលបើក App ក្នុង claude.ai។'}</div></div>
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
@@ -1214,7 +1310,7 @@ function refreshPlan(){
   el.innerHTML = 'ឆ្នាំទី' + toKh(y) + '៖ ' + G.map((g, i) => g + ' ' + r[i] + '%').join(' · ') + (Math.abs(s - 100) > 0.001 ? ' <b style="color:var(--danger)">(សរុប ' + s + '% មិនស្មើ ១០០%)</b>' : '') + '<br>ចំនួនសិស្សតាមនិទ្ទេសត្រូវបានគណនាតាមភាគរយនេះ ដោយបូកសរុបត្រូវនឹងចំនួនសិស្សក្នុងថ្នាក់ និងចំនួនស្រី (ឧ. A 10/4 = សរុប 10 ស្រី 4)។';
 }
 const RENDER = {agree:renderAgree, all:renderAll, settings:renderSettings, students:renderStudents, cover:renderCover, inner:renderInner, print:renderPrint};
-function show(tab){ S.ui.tab = tab; save(); renderTabs(); RENDER[tab](); renderSyncbar(); document.body.classList.toggle('nodl', !DL); document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL); window.scrollTo({top:0}); }
+function show(tab){ S.ui.tab = tab; save(); renderTabs(); RENDER[tab](); renderSyncbar(); storeStatus(); document.body.classList.toggle('nodl', !DL); document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL); window.scrollTo({top:0}); }
 
 /* ---------- events ---------- */
 document.addEventListener('input', e => {
@@ -1225,7 +1321,7 @@ document.addEventListener('input', e => {
     S.s.plan.pct[yi][gi] = (isFinite(v) && v >= 0) ? v : 0;
     clearPlanEdits(); save(); refreshPlan(); return;
   }
-  if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); return; }
+  if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); sheetDirty(t.dataset.k); return; }
   if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
   if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3'], place:['f.p1','f.p2','hf.p1','hf.p2','hf.p3'], monthFrom:['d.from','h.d.from'], monthTo:['d.to','h.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
   else if (t.dataset.mlist){ S.ui.monthsBy = S.ui.monthsBy || {}; S.ui.monthsBy[t.dataset.mlist] = t.value; save(); updatePreview(); }
@@ -1234,6 +1330,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.id === 'autoSheet'){ S.ui.autoSheet = t.checked; save(); if (t.checked) shMsg('បើករក្សាទុកស្វ័យប្រវត្តិ (៥ វិនាទីក្រោយកែចុងក្រោយ)។', false); return; }
   if (t.id === 'zc' || t.id === 'zi' || t.id === 'zp'){ ZSEL[{zc:'cover',zi:'inner',zp:'print'}[t.id]] = t.checked; const b = $('#zbtn'); if (b) b.textContent = 'Save all as ZIP (' + zipJobs(ZSEL).length + ' PDF)'; return; }
   if (t.dataset.actChange === 'teacher') pickTeacher(t.value);
   else if (t.dataset.actChange === 'planYear'){ S.s.plan.year = +t.value; clearPlanEdits(); save(); renderSettings(); }
@@ -1312,6 +1409,8 @@ document.addEventListener('click', async e => {
     save(); renderSettings();
   }
   else if (a === 'sync') syncSheet();
+  else if (a === 'shSave') sheetSave(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
+  else if (a === 'shLoad') sheetLoad(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
   else if (a === 'agKind'){ S.ui.agKind = b.dataset.v; save(); renderAgree(); }
   else if (a === 'agreflow') updatePreview();
   else if (a === 'planYearBtn'){ S.s.plan.year = +b.dataset.y; clearPlanEdits(); save(); renderSettings(); }
@@ -1345,6 +1444,13 @@ if (window.ResizeObserver) new ResizeObserver(() => layoutPreview()).observe(doc
 
 renderTabs();
 show(S.ui.tab in RENDER ? S.ui.tab : 'settings');
+try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(ok => { window.__persist = ok; storeStatus(); }).catch(() => {}); }catch(e){}
+// if the browser cleared localStorage, restore from the IndexedDB copy
+(function(){ const had = !!window.__hadLS;
+  idbGet().then(raw => { idbReady = true; if (!raw || had){ save(); return; }
+    try{ const p = JSON.parse(raw); S = {s:{...DEFAULT.s,...p.s}, students:p.students||{}, agr:p.agr||{}, sheet:{...DEFAULT.sheet,...(p.sheet||{})}, ui:{...DEFAULT.ui,...p.ui}}; S.s.plan = normPlan(S.s.plan); save(); RENDER[S.ui.tab in RENDER ? S.ui.tab : 'settings'](); }catch(e){} });
+})();
+setTimeout(storeStatus, 300);
 initDownloads().then(() => document.querySelectorAll('.nodl-only').forEach(b => b.hidden = !!DL));
 (async () => {
   try{ if (window.claude && window.claude.use) MCP = await window.claude.use('mcp'); }catch(e){ MCP = null; }
