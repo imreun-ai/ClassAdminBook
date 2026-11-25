@@ -226,7 +226,7 @@ function sortClasses(a){
 /* ---------- state ---------- */
 const KEY = 'sovphov-radthabal-v1';
 const DEFAULT = {
-  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', homeroom:'', monthFrom:'វិច្ឆិកា', monthTo:'សីហា', agrDate:'', province:'ពោធិ៍សាត់', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
+  s:{department:'មន្ទីរ អប់រំ យុវជន និង កីឡា ខេត្តពោធិ៍សាត់', office:'ការិយាល័យ អប់រំ យុវជន និង កីឡា នៃរដ្ឋបាលស្រុក កណ្ដៀង', school:'វិទ្យាល័យ ហ៊ុន សែន កណ្ដៀង', year:'២០២៦ - ២០២៧', subject:'អង់គ្លេស', phone:'092525388', teachers:['អ៊ឹម រើន'], teacher:'អ៊ឹម រើន', classes:['11A','11B'], logo:'', homeroom:'', monthFrom:'វិច្ឆិកា', monthTo:'សីហា', agrDate:'', place:'កណ្តៀង', province:'ពោធិ៍សាត់', sheetUrl:'https://docs.google.com/spreadsheets/d/16Qwf980aFgGEO2P4a7t4i-YSiGINXuKhjUkzYuMpf5A/edit?usp=sharing'},
   students:{}, agr:{}, sheet:{classes:[],teachers:[],at:0},
   ui:{tab:'settings', inner:'ប្រជុំការងារផ្សេងៗ', kind:'meeting', cls:'all', month:'', titles:{}, target:''}
 };
@@ -661,7 +661,7 @@ ${dev('d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិញ
   'ជួយគ្រូមុខវិជ្ជាផ្សេងទៀតនៅក្នុងសាលា និងនៅសាលារៀនផ្សេងក្នុងមូលដ្ឋាន តាមរយៈការសម្របសម្រួលការប្រជុំបច្ចេកទេសប្រចាំសប្តាហ៍ អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី»'
 ], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាសាលារៀនជាប់ពិន្ទុស្តង់ដាទី២', 'ដឹកនាំសកម្មភាពប្រជុំបច្ចេកទេសប្រចាំ នៅកម្រិតខេត្ត និងតំបន់ដើម្បីជួយគ្រូក្នុងសាលា និងក្រៅសាលាអំពីការអនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី'])}
 <!--B--><div class="sigs">
- <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('f.d1', agLunar())}<br>${ed('f.p1', agSolar('ធ្វើនៅសាលា '))}</div><div class="pu" style="margin-top:2mm"><b>${ed('f.r1', 'នាយករងបច្ចេកទេស / នាយកសាលា')}</b></div><div style="height:16mm"></div><div>${ed('f.n1', '')}</div></div>
+ <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('f.d1', agLunar())}<br>${ed('f.p1', agSolar())}</div><div class="pu" style="margin-top:2mm"><b>${ed('f.r1', 'នាយករងបច្ចេកទេស / នាយកសាលា')}</b></div><div style="height:16mm"></div><div>${ed('f.n1', '')}</div></div>
  <div><div>${ed('f.d2', agLunar())}<br>${ed('f.p2', ed_ph())}</div><div class="pu" style="margin-top:2mm"><b>${ed('f.r2', 'គ្រូមុខវិជ្ជា')}</b></div><div style="height:16mm"></div><div>${ed('f.n2', S.s.teacher)}</div></div>
 </div>
 <div class="c" style="margin-top:3mm">បានពិនិត្យ និងឯកភាព<br>${ed('f.d3', agLunar())}<br><span class="pu"><b>${ed('f.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('f.n3', '')}</div>
@@ -773,17 +773,18 @@ ${dev('h.d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិ�
   'ដឹកនាំប្រជុំបច្ចេកទេសប្រចាំខែ ជាមួយគ្រូមុខវិជ្ជា និងគ្រូបន្ទុកថ្នាក់ទាំងអស់ ក្នុងកម្រិតថ្នាក់ អំពីការអនុវត្ត «វិធីសាស្រ្តបង្រៀនថ្មី» ដើម្បីកែលម្អរបៀបធ្វើកិច្ចការឱ្យកាន់តែប្រសើរឡើង'
 ], ['ចូលរៀនកម្មវិធីបង្កើនគុណវុឌ្ឍគ្រូបង្រៀន', 'អនុវត្តវិធីសាស្រ្តបង្រៀនថ្មី ធានាសាលារៀនជាប់ពិន្ទុស្តង់ដាទី២'])}
 <!--B--><div class="sigs">
- <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('hf.d1', agLunar())}<br>${ed('hf.p1', agSolar('ធ្វើនៅសាលា '))}</div><div class="pu" style="margin-top:2mm"><b>${ed('hf.r1', 'នាយករងបច្ចេកទេស')}</b></div><div style="height:16mm"></div><div>${ed('hf.n1', '')}</div></div>
+ <div><div>បានពិនិត្យត្រឹមត្រូវ<br>${ed('hf.d1', agLunar())}<br>${ed('hf.p1', agSolar())}</div><div class="pu" style="margin-top:2mm"><b>${ed('hf.r1', 'នាយករងបច្ចេកទេស')}</b></div><div style="height:16mm"></div><div>${ed('hf.n1', '')}</div></div>
  <div><div>${ed('hf.d2', agLunar())}<br>${ed('hf.p2', ed_ph())}</div><div class="pu" style="margin-top:2mm"><b>${ed('hf.r2', 'គ្រូបន្ទុកថ្នាក់')}</b></div><div style="height:16mm"></div><div>${ed('hf.n2', S.s.teacher)}</div></div>
 </div>
-<div class="c" style="margin-top:3mm">បានឃើញ និងឯកភាព<br>${ed('hf.d3', agLunar())}<br>${ed('hf.p3', agSolar('ធ្វើនៅសាលា '))}<br><span class="pu"><b>${ed('hf.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('hf.n3', '')}</div>
+<div class="c" style="margin-top:3mm">បានឃើញ និងឯកភាព<br>${ed('hf.d3', agLunar())}<br>${ed('hf.p3', agSolar())}<br><span class="pu"><b>${ed('hf.r3', 'គណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('hf.n3', '')}</div>
 `);
   return {pages: agPaginate(blocks), land:false, file:'work-agreement-homeroom.html'};
 }
 function agLunar(){ const k = khDates(S.s.agrDate); return k ? k.lunar : 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....'; }
-function agSolar(pre){ const k = khDates(S.s.agrDate); return k ? pre + k.solar : pre + 'ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'; }
+function agPlace(){ return (S.s.place == null ? 'កណ្តៀង' : S.s.place).trim(); }
+function agSolar(){ const k = khDates(S.s.agrDate); return (agPlace() ? agPlace() + ' ' : '') + (k ? k.solar : 'ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'); }
 function agrPrev(){ const k = khDates(S.s.agrDate); return k ? 'ចន្ទគតិ៖ '+k.lunar+'<br>សុរិយគតិ៖ '+k.solar : (S.s.agrDate ? '<span style="color:var(--danger)">ទម្រង់មិនត្រឹមត្រូវ (ប្រើ ថ្ងៃ/ខែ/ឆ្នាំ)</span>' : 'បញ្ចូលកាលបរិច្ឆេទ ដើម្បីបង្ហាញចន្ទគតិ និងសុរិយគតិស្វ័យប្រវត្តិ'); }
-function ed_ph(){ const k = khDates(S.s.agrDate); return agV('province', S.s.province || 'ពោធិ៍សាត់') + ' ' + (k ? k.solar : 'ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'); }
+function ed_ph(){ return agSolar(); }
 DOC_CSS += AG_CSS;
 
 function pagesFor(tab){
@@ -1102,6 +1103,7 @@ ${field('ឈ្មោះសាលា', 'school')}
 ${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២៧')}
 <div class="inline" style="margin-bottom:12px"><div class="field" style="flex:1;margin:0"><label for="mFrom">ពីខែ (កិច្ចព្រមព្រៀងការងារ)</label><select id="mFrom" data-set="monthFrom">${KH_MONTHS.map(m=>`<option ${m===S.s.monthFrom?'selected':''}>${m}</option>`).join('')}</select></div>
 <div class="field" style="flex:1;margin:0"><label for="mTo">ដល់ខែ</label><select id="mTo" data-set="monthTo">${KH_MONTHS.map(m=>`<option ${m===S.s.monthTo?'selected':''}>${m}</option>`).join('')}</select></div></div>
+<div class="field"><label for="agPlaceIn">ធ្វើនៅ (ទីកន្លែងធ្វើកិច្ចព្រមព្រៀង)</label><input id="agPlaceIn" type="text" data-set="place" value="${esc(S.s.place == null ? 'កណ្តៀង' : S.s.place)}" placeholder="កណ្តៀង" autocomplete="off"></div>
 <div class="field"><label for="agrDate">កាលបរិច្ឆេទកិច្ចព្រមព្រៀង (ថ្ងៃ/ខែ/ឆ្នាំ ឧ. 25/11/2026)</label><input id="agrDate" type="text" inputmode="numeric" data-set="agrDate" value="${esc(S.s.agrDate||'')}" placeholder="25/11/2026" autocomplete="off"><div class="help" id="agrDatePrev" aria-live="polite">${agrPrev()}</div></div>
 </div>
 <div class="card"><h2>បម្រុងទុកទិន្នន័យ</h2>
@@ -1225,7 +1227,7 @@ document.addEventListener('input', e => {
   }
   if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); return; }
   if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
-  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3'], monthFrom:['d.from','h.d.from'], monthTo:['d.to','h.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
+  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3'], place:['f.p1','f.p2','hf.p1','hf.p2','hf.p3'], monthFrom:['d.from','h.d.from'], monthTo:['d.to','h.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
   else if (t.dataset.mlist){ S.ui.monthsBy = S.ui.monthsBy || {}; S.ui.monthsBy[t.dataset.mlist] = t.value; save(); updatePreview(); }
   else if (t.dataset.title){ S.ui.titles[t.dataset.title] = t.value; save(); updatePreview(); }
   else if (t.dataset.ui === 'month'){ S.ui.month = t.value; save(); updatePreview(); }
