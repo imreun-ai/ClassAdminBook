@@ -995,7 +995,7 @@ function errText(e){
   return 'ទាញមិនបាន (' + (c || 'error') + ')។';
 }
 const HEADERS = new Set(['ថ្នាក់','Class','ឈ្មោះ','ឈ្មោះសិស្ស','លរ','ល.រ']);
-async function getRowsCsv(range){
+async function getRowsCsv(range, keep){
   // outside claude.ai: read the sheet's public CSV export (sheet must be shared "anyone with the link can view")
   const m = /^'(.+)'!/.exec(range); const tab = m ? m[1] : '';
   const url = 'https://docs.google.com/spreadsheets/d/' + sheetId() + '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(tab);
@@ -1004,11 +1004,11 @@ async function getRowsCsv(range){
   const text = await res.text();
   if (/^\s*</.test(text)){ const e = new Error('html'); e.code = 'sheet_private'; throw e; }
   const rows = parseDelimited(text, ',');
-  if (rows.length && HEADERS.has(zw(rows[0][0]).trim()) || rows.length && HEADERS.has(zw(rows[0][1] || '').trim())) rows.shift();
+  if (!keep && (rows.length && HEADERS.has(zw(rows[0][0]).trim()) || rows.length && HEADERS.has(zw(rows[0][1] || '').trim()))) rows.shift();
   return rows;
 }
-async function getRows(range){
-  if (!MCP) return getRowsCsv(range);
+async function getRows(range, keep){
+  if (!MCP) return getRowsCsv(range, keep);
   const r = await MCP.callTool(SHEETSRV, 'get_values', {spreadsheetId: sheetId(), range}, {cache:false});
   let p = r.payload;
   if (typeof p === 'string'){ try{ p = JSON.parse(p); }catch(e){ p = null; } }
@@ -1020,16 +1020,27 @@ async function syncSheet(){
   syncing = true; setSync('កំពុងទាញពី Google Sheet…', false);
   try{
     const cls = await getRows(`'${TAB.classes}'!A2:A400`);
-    const [tea, stu] = await Promise.all([getRows(`'${TAB.teachers}'!A2:C600`), getRows(`'${TAB.students}'!A2:D5000`)]);
+    const [tea, stu] = await Promise.all([getRows(`'${TAB.teachers}'!A2:C600`), getRows(`'${TAB.students}'!A1:L5000`, true)]);
     const by = {}; let n = 0;
-    stu.forEach(r => {
-      const name = cleanName(r[1]), c = normCls(zw(r[3] || ''));
+    // find columns by header name (sheet layouts differ); fall back to the old layout: B=name, C=sex, D=class
+    const head = (stu[0] || []).map(x => zw(x).replace(/\s+/g, '').toLowerCase());
+    const find = (...ks) => head.findIndex(x => ks.some(k => x.includes(k)));
+    const hasHead = head.some(x => x.includes('ឈ្មោះ') || x.includes('ថ្នាក់') || x === 'class' || x.includes('ភេទ'));
+    let iN = 1, iS = 2, iC = 3, rowsS = stu;
+    if (hasHead){
+      iN = find('ឈ្មោះសិស្ស', 'ឈ្មោះ', 'name'); iS = find('ភេទ', 'sex', 'gender'); iC = find('ថ្នាក់', 'class');
+      if (iN < 0) iN = 1; if (iC < 0) iC = 3;
+      rowsS = stu.slice(1);
+    } else if (HEADERS.has(zw((stu[0] || [])[0]).trim()) || HEADERS.has(zw((stu[0] || [])[1] || '').trim())) rowsS = stu.slice(1);
+    rowsS.forEach(r => {
+      const name = cleanName(r[iN]), c = normCls(zw(r[iC] || ''));
       if (!name || !c) return;
-      (by[c] = by[c] || []).push({name, sex: normSex(zw(r[2]))}); n++;
+      (by[c] = by[c] || []).push({name, sex: normSex(zw(iS >= 0 ? r[iS] : ''))}); n++;
     });
     const teachers = tea.map(r => ({name: cleanName(r[0]), subject: cleanName(r[1]), phone: fixPhone(r[2])})).filter(t => t.name);
     const list = sortClasses(cls.map(r => normCls(zw(r[0] || ''))).filter(Boolean));
     S.sheet = {classes: list.length ? list : sortClasses(Object.keys(by)), teachers, at: Date.now()};
+    ['ប្រុស','ស្រី','ប','ស'].forEach(k => { if (!list.includes(k)) delete S.students[k]; }); // leftovers from an older wrong-column read
     Object.keys(by).forEach(c => { S.students[c] = by[c]; });
     const cur = teachers.find(t => keyName(t.name) === keyName(S.s.teacher));
     if (cur){ S.s.teacher = cur.name; if (cur.subject) S.s.subject = cur.subject; if (cur.phone) S.s.phone = cur.phone; }
