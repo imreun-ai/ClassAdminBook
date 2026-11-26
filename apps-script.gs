@@ -1,5 +1,5 @@
-const KEY = '';  // (ជម្រើស) ពាក្យសម្ងាត់ — ត្រូវដូចក្នុង App
-const TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};
+const KEY = '';  // ទុកទទេ = មិនប្រើពាក្យសម្ងាត់
+const TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់', staff: 'កិច្ចព្រមព្រៀង បុគ្គលិកទីចាត់ការ'};
 const HEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];
 const norm = s => String(s).replace(/\s+/g, '');
 function doPost(e) {
@@ -7,7 +7,7 @@ function doPost(e) {
   try {
     const r = JSON.parse(e.postData.contents);
     if (KEY && r.key !== KEY) throw new Error('ពាក្យសម្ងាត់មិនត្រូវ');
-    const name = TABS[r.kind]; if (!name) throw new Error('kind');
+    const name = TABS[r.kind] || (String(r.tab || '').indexOf('កិច្ចព្រមព្រៀង ') === 0 ? String(r.tab) : ''); if (!name) throw new Error('kind');
     const ss = SpreadsheetApp.getActive();
     let sh = ss.getSheetByName(name);
     if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, 7).setValues([HEAD]); sh.setFrozenRows(1); }

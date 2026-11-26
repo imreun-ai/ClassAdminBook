@@ -586,6 +586,7 @@ function agPaginate(blocks){
 }
 function agdoc(){
   if (S.ui.agKind === 'homeroom') return agHR();
+  if (S.ui.agKind === 'staff') return agStaff();
   const cl = classes();
   const [y1, y2] = agYears();
   const [tt, tf] = agCounts(cl);
@@ -798,6 +799,53 @@ ${dev('h.d1', 'លទ្ធផលរំពឹងទុកទី១៖ បរិ�
 `);
   return {pages: agPaginate(blocks), land:false, file:'work-agreement-homeroom.html'};
 }
+
+/* ---------- Office-staff (បុគ្គលិកទីចាត់ការ) work agreement, all editable ---------- */
+const STAFF_DUTIES = [
+  'គោរព ពេលវេលាធ្វើការងារ ពីម៉ោង ៧h០០ ដល់ ១១h០០ ព្រឹក ពេលរសៀលម៉ោង ១h០០ ដល់ម៉ោង ៤h០០ គត់ ។',
+  'គោរព អនុវត្តតាម ការចាត់តាំងមានក្នុង បំណែងចែកភារៈកិច្ចប្រចាំឆ្នាំ របស់ នាយកសាលា និងយោងតាមការ ចាំបាច់ របស់សាលារៀន',
+  'ទទួលរៀបចំទុកដាក់ លើកិច្ចការរដ្ឋបាលនានាដែលគណៈគ្រប់គ្រងបានចាត់តាំង តាមកម្រិតភារកិច្ច ដោយផ្អែកតាមលិខិតបង្គាប់ការទទួលខុសត្រូវ ដើម្បីបំពេញ ការងារឱ្យបានល្អ នឹងទាន់ពេល ត្រឹមត្រូវ ច្បាស់លាស់ ។',
+  'ទទួលអនុវត្តកិច្ចការជាមួយគណៈគ្រប់គ្រង និងទទួលខុសត្រូវថែទាំគ្រប់គ្រង រក្សាសណ្តាប់ធ្នាប់រាល់ លិខិតបទដ្ឋាន រដ្ឋបាលនានា របស់ ទីចាត់ការ ។',
+  'ធ្វើការជាមួយគណៈកម្មការគ្រប់គ្រងសាលារៀនលោកគ្រូ អ្នកគ្រូ រៀបចំក្រុមមាតាបិតាសិស្សតាម ភូមិ ដើម្បីជួយសិស្ស គ្រូ ឱ្យមករៀនបានទៀងទាត់ សិស្សរៀនយឺត',
+  'ធ្វើការជាមួយគណៈកម្មការគ្រប់គ្រងសាលារៀន រៀបចំស្រង់វត្តមានគ្រូ សិស្ស ដើម្បីជួយកិច្ចការនាយក នាយករង និង សម្រួលដល់កិច្ចការ ក្រុមប្រឹក្សាកុមារ យុវជន',
+  'រៀបចំធ្វើបូកសរុប របាយការណ៍ និងសម្របសម្រួលកិច្ចការប្រជុំ នានា កម្មវិធីផ្សេងៗ',
+  'កត់ត្រាធ្វើ កំណត់ហេតុនានា និង ធ្វើបញ្ជី ផ្សេងៗ កិច្ចការតេស្ត លទ្ធផលសិក្សាសិស្ស',
+  'ធ្វើការរួមជាមួយគណៈកម្មការគ្រប់គ្រងសាលារៀនធ្វើផែនការវិនិយោគឱ្យបានយ៉ាងតិច ៣ សម្រាប់កៀរគរធនធានជួយសិស្ស គ្រួសារជួបការលំបាក និងអភិវឌ្ឍសាលារៀន',
+  'ចូលរួមជាមួយគណៈគ្រប់គ្រងសាលារៀន និងអ្នកពាក់ព័ន្ធ ធ្វើផែនការចំណាយប្រចាំឆ្នាំផ្អែកលើផែនការកែលម្អសាលារៀន និងគម្រោង ចំណាយប្រចាំឆ្នាំ សម្រាប់ជួយសិស្ស គ្រួសារជួបការលំបាក និង អភិវឌ្ឍសាលារៀនលើបំណិន រកចំណូល ។'
+];
+function agStaff(){
+  const [y1, y2] = agYears();
+  const mf = S.s.monthFrom || 'វិច្ឆិកា', mt = S.s.monthTo || 'សីហា';
+  const kv = (l, v) => `<div class="kv"><b>${l}</b><i>៖</i><span>${v}</span></div>`;
+  const blocks = [];
+  const B = html => html.split('<!--B-->').forEach(x => blocks.push('<div class="blk">' + x + '</div>'));
+  B(`
+<div class="moul" style="font-size:11pt">ព្រះរាជាណាចក្រកម្ពុជា</div><div class="moul" style="font-size:10pt">ជាតិ សាសនា ព្រះមហាក្សត្រ</div>
+<div class="moul" style="font-size:12pt">កិច្ចព្រមព្រៀងលទ្ធផលការងារ<br>និងការអភិវឌ្ឍវិជ្ជាជីវៈប្រចាំឆ្នាំ</div>
+<div class="moul gr" style="font-size:12pt">${ed('o.title', 'របស់បុគ្គលិកទីចាត់ការ')}</div>
+<div class="c" style="font-weight:700;margin:2mm 0 1mm">ពីខែ ${ed('o.d.from', mf)} ឆ្នាំ${ed('o.d.y1', y1)} ដល់ខែ ${ed('o.d.to', mt)} ឆ្នាំ${ed('o.d.y2', y2)}</div>
+<hr>
+${kv('ឈ្មោះសាលារៀន', ed('school', S.s.school))}${kv('ភូមិ', ed('village', 'កណ្តៀង'))}${kv('ឃុំ/សង្កាត់', ed('commune', 'កណ្តៀង'))}${kv('ក្រុង/ស្រុក', ed('district', 'កណ្តៀង'))}${kv('រាជធានី/ខេត្ត', ed('province', 'ពោធិ៍សាត់'))}
+<hr>
+${kv('ឈ្មោះបុគ្គលិកទីចាត់ការ', '<b class="pu">' + ed('o.name', S.s.teacher) + '</b>')}
+${kv('ឋានៈមន្រ្តីរាជការ', ed('o.rank', ''))}${kv('ឋានៈវិជ្ជាជីវៈ', ed('o.prof', ''))}${kv('ហត្ថលេខា', ed('o.sign0', ''))}
+<div style="margin:4mm 0 1mm" class="gr"><b>ធ្វើកិច្ចព្រមព្រៀងលទ្ធផលការងារ និងការអភិវឌ្ឍវិជ្ជាជីវៈប្រចាំឆ្នាំជាមួយ៖</b></div>
+<div class="pu" style="margin:3mm 0 .5mm"><b>${ed('o.r1', 'នាយក ឬនាយករងសាលារៀន')}</b></div>
+${kv('ឈ្មោះ', ed('o.n1', 'សួស ម៉េងសៀ') + ' &nbsp;&nbsp;&nbsp;ភេទ៖ ' + ed('o.g1', 'ប្រុស'))}${kv('ថ្ងៃខែឆ្នាំ ឯកភាព', ed('o.dt1', ''))}${kv('ហត្ថលេខា', ed('o.sg1', ''))}
+<div style="height:12mm"></div>
+<div class="c bl" style="margin:2mm 0"><b>និង</b></div>
+<div class="pu" style="margin:3mm 0 .5mm"><b>${ed('o.r2', 'ប្រធានគណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></div>
+${kv('ឈ្មោះ', ed('o.n2', 'ជេដ្ធ សេងញិន') + ' &nbsp;&nbsp;&nbsp;ភេទ៖ ' + ed('o.g2', 'ប្រុស'))}${kv('ថ្ងៃខែឆ្នាំ អនុម័ត', ed('o.dt2', ''))}${kv('ហត្ថលេខា', ed('o.sg2', ''))}
+`);
+  B(`<table><colgroup><col style="width:34mm"><col></colgroup><thead><tr><th>${ed('o.th1', 'តួនាទី')}</th><th>${ed('o.th2', 'ភារកិច្ច បុគ្គលិកទីចាត់ការ')}</th></tr></thead><tbody><tr><td class="m"><b>${ed('o.role', 'ប្រ.ច. ០៤ (បុគ្គលិកទីចាត់ការ)')}</b></td><td style="text-align:left">${STAFF_DUTIES.map((t, i) => `<div style="display:flex;gap:6px;margin:0 0 2mm"><b>${toKh(i + 1)}.</b><div style="flex:1">${ed('o.duty.' + i, t)}</div></div>`).join('')}</td></tr></tbody></table>`);
+  B(`<div class="sigs">
+ <div><div>${ed('of.d1', agLunar())}<br>${ed('of.p1', agSolar())}</div><div style="margin-top:2mm">បានឃើញ និងឯកភាព</div><div class="pu"><b>${ed('of.r1', 'នាយក ឬ នាយករងសាលា')}</b></div><div style="height:16mm"></div><div>${ed('of.n1', '')}</div></div>
+ <div><div>${ed('of.d2', agLunar())}<br>${ed('of.p2', agSolar())}</div><div class="pu" style="margin-top:2mm"><b>${ed('of.r2', 'អ្នកទទួលបន្ទុក')}</b></div><div style="height:16mm"></div><div>${ed('of.n2', S.s.teacher)}</div></div>
+</div>
+<div class="c" style="margin-top:3mm">បានឃើញ និងអនុម័ត<br>${ed('of.d3', agLunar())}<br>${ed('of.p3', agSolar())}<br><span class="pu"><b>${ed('of.r3', 'ប្រធានគណៈកម្មការគ្រប់គ្រងសាលារៀន')}</b></span><div style="height:14mm"></div>${ed('of.n3', '')}</div>
+`);
+  return {pages: agPaginate(blocks), land:false, file:'work-agreement-staff.html'};
+}
 function agLunar(){ const k = khDates(S.s.agrDate); return k ? k.lunar : 'ថ្ងៃ........ខែ........ឆ្នាំ........ ព.ស.២៥៦....'; }
 function agPlace(){ return (S.s.place == null ? 'កណ្តៀង' : S.s.place).trim(); }
 function agSolar(){ const k = khDates(S.s.agrDate); return (agPlace() ? agPlace() + ' ' : '') + (k ? k.solar : 'ថ្ងៃទី..... ខែ..... ឆ្នាំ២០២...'); }
@@ -905,6 +953,7 @@ function zipJobs(sel){
   if (sel.print){
     ['meeting','tech','agreement'].forEach(k => jobs.push({path:'៣-ឯកសារព្រីន/' + safeName(KINDS[k].label) + '.pdf', get:() => withUi({kind:k, agKind:'subject'}, () => pagesFor('print'))}));
     jobs.push({path:'៣-ឯកសារព្រីន/កិច្ចព្រមព្រៀងការងារគ្រូបន្ទុកថ្នាក់.pdf', get:() => withUi({agKind:'homeroom'}, () => pagesFor('agree'))});
+    jobs.push({path:'៣-ឯកសារព្រីន/កិច្ចព្រមព្រៀងការងារបុគ្គលិកទីចាត់ការ.pdf', get:() => withUi({agKind:'staff'}, () => pagesFor('agree'))});
     ['extract','absence','scores','slow'].forEach(k => cl.forEach(c => jobs.push({path:'៣-ឯកសារព្រីន/ថ្នាក់ ' + safeName(c) + '/' + safeName(KINDS[k].label) + ' ' + safeName(c) + '.pdf', get:() => withUi({kind:k, cls:c}, () => pagesFor('print'))})));
   }
   return jobs;
@@ -1074,20 +1123,23 @@ async function syncSheet(){
 
 
 /* ---------- save / load agreement edits in the connected Google Sheet (by teacher name) ---------- */
-const APPS_SCRIPT = "const KEY = '';  // ទុកទទេ = មិនប្រើពាក្យសម្ងាត់\nconst TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};\nconst HEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];\nconst norm = s => String(s).replace(/\\s+/g, '');\nfunction doPost(e) {\n  let out;\n  try {\n    const r = JSON.parse(e.postData.contents);\n    if (KEY && r.key !== KEY) throw new Error('ពាក្យសម្ងាត់មិនត្រូវ');\n    const name = TABS[r.kind]; if (!name) throw new Error('kind');\n    const ss = SpreadsheetApp.getActive();\n    let sh = ss.getSheetByName(name);\n    if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, 7).setValues([HEAD]); sh.setFrozenRows(1); }\n    const last = Math.max(sh.getLastRow(), 1);\n    const names = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues().map(x => norm(x[0])) : [];\n    const idx = names.indexOf(norm(r.teacher));\n    if (r.op === 'save') {\n      const ch = []; for (let i = 0; i < 4; i++) ch.push(String(r.data).slice(i * 40000, (i + 1) * 40000));\n      const row = idx >= 0 ? idx + 2 : last + 1;\n      sh.getRange(row, 1, 1, 7).setValues([[r.teacher, r.desc || '', Utilities.formatDate(new Date(), 'Asia/Phnom_Penh', 'dd/MM/yyyy HH:mm'), ch[0], ch[1], ch[2], ch[3]]]);\n      out = {ok: true, row: row};\n    } else if (r.op === 'load') {\n      if (idx < 0) out = {ok: true, found: false};\n      else { const v = sh.getRange(idx + 2, 1, 1, 7).getValues()[0]; out = {ok: true, found: true, at: String(v[2]), data: v.slice(3).join('')}; }\n    } else throw new Error('op');\n  } catch (err) { out = {ok: false, error: String(err.message || err)}; }\n  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);\n}";
+const APPS_SCRIPT = "const KEY = '';  // ទុកទទេ = មិនប្រើពាក្យសម្ងាត់\nconst TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់', staff: 'កិច្ចព្រមព្រៀង បុគ្គលិកទីចាត់ការ'};\nconst HEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];\nconst norm = s => String(s).replace(/\\s+/g, '');\nfunction doPost(e) {\n  let out;\n  try {\n    const r = JSON.parse(e.postData.contents);\n    if (KEY && r.key !== KEY) throw new Error('ពាក្យសម្ងាត់មិនត្រូវ');\n    const name = TABS[r.kind] || (String(r.tab || '').indexOf('កិច្ចព្រមព្រៀង ') === 0 ? String(r.tab) : ''); if (!name) throw new Error('kind');\n    const ss = SpreadsheetApp.getActive();\n    let sh = ss.getSheetByName(name);\n    if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, 7).setValues([HEAD]); sh.setFrozenRows(1); }\n    const last = Math.max(sh.getLastRow(), 1);\n    const names = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues().map(x => norm(x[0])) : [];\n    const idx = names.indexOf(norm(r.teacher));\n    if (r.op === 'save') {\n      const ch = []; for (let i = 0; i < 4; i++) ch.push(String(r.data).slice(i * 40000, (i + 1) * 40000));\n      const row = idx >= 0 ? idx + 2 : last + 1;\n      sh.getRange(row, 1, 1, 7).setValues([[r.teacher, r.desc || '', Utilities.formatDate(new Date(), 'Asia/Phnom_Penh', 'dd/MM/yyyy HH:mm'), ch[0], ch[1], ch[2], ch[3]]]);\n      out = {ok: true, row: row};\n    } else if (r.op === 'load') {\n      if (idx < 0) out = {ok: true, found: false};\n      else { const v = sh.getRange(idx + 2, 1, 1, 7).getValues()[0]; out = {ok: true, found: true, at: String(v[2]), data: v.slice(3).join('')}; }\n    } else throw new Error('op');\n  } catch (err) { out = {ok: false, error: String(err.message || err)}; }\n  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);\n}";
 /* ជាប់រហូត៖ ដាក់តំណ Apps Script ទីនេះ (…/exec) ដើម្បីប្រើគ្រប់ម៉ាស៊ីនដោយមិនបាច់បញ្ចូលម្តងទៀត */
-const APP_VER = '2026-11-26 · ៣២';
+const APP_VER = '2026-11-26 · ៣៣';
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPbO9GuUdWRPd0g7hmgwzjeam8jdx_ec63YXalGs3Gvs__LNUvWPS6GqH34ggvoNUy_Q/exec';
 const scriptUrl = () => ((S.s.scriptUrl || '').trim() || APP_SCRIPT_URL);
-const AGTAB = {subject:'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom:'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};
+const AGTAB = {subject:'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom:'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់', staff:'កិច្ចព្រមព្រៀង បុគ្គលិកទីចាត់ការ'};
 const AGHEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];
 const AGCHUNK = 40000, AGCOLS = 4;
 let sheetBusy = false, sheetTimer = 0; const tabReady = {};
-const agKindOf = k => /^hf?\./.test(k) ? 'homeroom' : 'subject';
+const agKindOf = k => /^hf?\./.test(k) ? 'homeroom' : /^of?\./.test(k) ? 'staff' : 'subject';
+const curKind = () => S.ui.agKind === 'homeroom' ? 'homeroom' : S.ui.agKind === 'staff' ? 'staff' : 'subject';
+const KIND_LABEL = {subject:'គ្រូមុខវិជ្ជា', homeroom:'គ្រូបន្ទុកថ្នាក់', staff:'បុគ្គលិកទីចាត់ការ'};
 function agKindData(kind){ const o = {}; Object.keys(S.agr).forEach(k => { if (agKindOf(k) === kind) o[k] = S.agr[k]; }); return o; }
 function shMsg(t, err){ const el = document.getElementById('sheetMsg'); if (el){ el.textContent = t; el.className = err ? 'msg err' : 'muted'; } }
 function shErr(e){
   const c = e && e.code;
+  if (c === 'script_old') return 'Apps Script ចាស់មិនស្គាល់ប្រភេទនេះ។ សូមចម្លងកូដថ្មីពី «១. ការកំណត់» ទៅ Apps Script រួច Deploy → Manage deployments → កែ (✎) → Version: New version → Deploy (តំណនៅដដែល)។';
   if (c === 'script_net') return 'ភ្ជាប់ Apps Script មិនបាន។ ពិនិត្យតំណ និងថា Deploy ជា «Anyone» (អ្នកណាក៏បាន)។';
   if (c === 'script_bad') return 'Apps Script ឆ្លើយមិនត្រឹមត្រូវ។ ពិនិត្យថាតំណជា Web app (…/exec) ហើយបាន Deploy កំណែថ្មី។';
   if (c === 'script_err') return 'Apps Script រាយការណ៍៖ ' + String((e && e.message) || '').slice(0, 140);
@@ -1129,7 +1181,7 @@ async function scriptCall(body){
   try{ res = await fetch(scriptUrl(), {method:'POST', body: JSON.stringify({...body, key: ''}), redirect:'follow'}); }
   catch(e){ const er = new Error('network'); er.code = 'script_net'; throw er; }
   let j; try{ j = await res.json(); }catch(e){ const er = new Error('bad'); er.code = 'script_bad'; throw er; }
-  if (!j.ok){ const er = new Error(j.error || 'error'); er.code = 'script_err'; throw er; }
+  if (!j.ok){ const er = new Error(j.error || 'error'); er.code = (j.error === 'kind' || j.error === 'Error: kind') ? 'script_old' : 'script_err'; throw er; }
   return j;
 }
 async function sheetSave(kind, quiet){
@@ -1139,9 +1191,9 @@ async function sheetSave(kind, quiet){
     const json = JSON.stringify(agKindData(kind));
     if (json.length > AGCHUNK * AGCOLS){ shMsg('ទិន្នន័យធំពេក មិនអាចរក្សាទុកក្នុង Sheet។ សូមទាញយកបម្រុងទុក (.json)។', true); return; }
     const chunks = []; for (let i = 0; i < AGCOLS; i++) chunks.push(json.slice(i * AGCHUNK, (i + 1) * AGCHUNK));
-    const desc = kind === 'homeroom' ? 'ថ្នាក់បន្ទុក ' + (S.s.homeroom || '') : (S.s.subject || '') + ' · ថ្នាក់ ' + (S.s.classes || []).join(', ');
+    const desc = kind === 'staff' ? 'បុគ្គលិកទីចាត់ការ' : kind === 'homeroom' ? 'ថ្នាក់បន្ទុក ' + (S.s.homeroom || '') : (S.s.subject || '') + ' · ថ្នាក់ ' + (S.s.classes || []).join(', ');
     if (!MCP){
-      const j = await scriptCall({op:'save', kind, teacher: S.s.teacher, desc, data: json});
+      const j = await scriptCall({op:'save', kind, tab: AGTAB[kind], teacher: S.s.teacher, desc, data: json});
       shMsg('✓ បានរក្សាទុក «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» (ជួរទី ' + j.row + ')', false); return;
     }
     await shEnsureTab(kind);
@@ -1159,7 +1211,7 @@ async function sheetLoad(kind){
   try{
     let rows, idx;
     if (!MCP){
-      const j = await scriptCall({op:'load', kind, teacher: S.s.teacher});
+      const j = await scriptCall({op:'load', kind, tab: AGTAB[kind], teacher: S.s.teacher});
       if (!j.found){ shMsg('មិនទាន់មានទិន្នន័យរបស់ «' + S.s.teacher + '» ក្នុងផ្ទាំង «' + AGTAB[kind] + '» ទេ។', true); return; }
       rows = [['', '', j.at || '', j.data || '']]; idx = 0;
     } else ({rows, idx} = await shFindRow(kind));
@@ -1316,8 +1368,8 @@ function renderAgree(){
   $('#app').innerHTML = `<div class="split"><div class="card"><h2>កិច្ចព្រមព្រៀងការងារ</h2>
 <p class="help" style="margin-top:0">ចុចលើអក្សរ ឬក្រឡាណាក៏បាន នៅក្នុងការមើលជាមុន ដើម្បីកែ។ ឈ្មោះ មុខវិជ្ជា ថ្នាក់ ឆ្នាំ និងចំនួនសិស្ស (សរុប/ស្រី) ទាញពីការកំណត់ និង Google Sheet ស្វ័យប្រវត្តិ។ តារាងស្តង់ដាទី១ មានមួយតារាងក្នុងមួយថ្នាក់ដែលបានជ្រើស។</p>
 <p class="help">អត្ថបទនិងតារាងរត់បន្តគ្នាតាមទំព័រ។ បើកែអត្ថបទវែងឡើង ហើយទំព័រមិនត្រឹមត្រូវ សូមចុច «រៀបទំព័រឡើងវិញ»។</p>
-<div class="field"><label>ជ្រើសប្រភេទកិច្ចព្រមព្រៀង</label><div class="inline"><button type="button" class="btn ${S.ui.agKind!=='homeroom'?'pri':''}" data-act="agKind" data-v="subject" aria-pressed="${S.ui.agKind!=='homeroom'}">គ្រូមុខវិជ្ជា</button><button type="button" class="btn ${S.ui.agKind==='homeroom'?'pri':''}" data-act="agKind" data-v="homeroom" aria-pressed="${S.ui.agKind==='homeroom'}">គ្រូបន្ទុកថ្នាក់</button></div><div class="help">ឯកសារគ្រូបន្ទុកថ្នាក់ប្រើថ្នាក់បន្ទុកក្នុង «១. ការកំណត់»</div></div>
-<div class="field"><label>រក្សាទុកការកែក្នុង Google Sheet (តាមឈ្មោះគ្រូ៖ ${esc(S.s.teacher || '—')})</label><div class="inline"><button type="button" class="btn" data-act="shSave" ${shCan() ? '' : 'disabled'}>រក្សាទុកទៅ Sheet (${S.ui.agKind === 'homeroom' ? 'គ្រូបន្ទុកថ្នាក់' : 'គ្រូមុខវិជ្ជា'})</button><button type="button" class="btn" data-act="shLoad" ${shCan() ? '' : 'disabled'}>ទាញពី Sheet</button></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" id="autoSheet" ${S.ui.autoSheet ? 'checked' : ''} ${shCan() ? '' : 'disabled'}> រក្សាទុកស្វ័យប្រវត្តិក្រោយកែ</label><div class="muted" id="sheetMsg" aria-live="polite" style="margin:6px 0 0">${shCan() ? 'រក្សាទុកក្នុងផ្ទាំង «' + AGTAB[S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject'] + '» (បង្កើតដោយស្វ័យប្រវត្តិ)។' : 'ត្រូវភ្ជាប់ Apps Script ក្នុង «១. ការកំណត់» ដើម្បីប្រើនៅក្រៅ claude.ai។'}</div></div>
+<div class="field"><label>ជ្រើសប្រភេទកិច្ចព្រមព្រៀង</label><div class="inline">${['subject','homeroom','staff'].map(k => `<button type="button" class="btn ${curKind()===k?'pri':''}" data-act="agKind" data-v="${k}" aria-pressed="${curKind()===k}">${KIND_LABEL[k]}</button>`).join('')}</div><div class="help">គ្រូបន្ទុកថ្នាក់ប្រើថ្នាក់បន្ទុកក្នុង «១. ការកំណត់»</div></div>
+<div class="field"><label>រក្សាទុកការកែក្នុង Google Sheet (តាមឈ្មោះគ្រូ៖ ${esc(S.s.teacher || '—')})</label><div class="inline"><button type="button" class="btn" data-act="shSave" ${shCan() ? '' : 'disabled'}>រក្សាទុកទៅ Sheet (${KIND_LABEL[curKind()]})</button><button type="button" class="btn" data-act="shLoad" ${shCan() ? '' : 'disabled'}>ទាញពី Sheet</button></div><label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:400"><input type="checkbox" id="autoSheet" ${S.ui.autoSheet ? 'checked' : ''} ${shCan() ? '' : 'disabled'}> រក្សាទុកស្វ័យប្រវត្តិក្រោយកែ</label><div class="muted" id="sheetMsg" aria-live="polite" style="margin:6px 0 0">${shCan() ? 'រក្សាទុកក្នុងផ្ទាំង «' + AGTAB[curKind()] + '» (បង្កើតដោយស្វ័យប្រវត្តិ)។' : 'ត្រូវភ្ជាប់ Apps Script ក្នុង «១. ការកំណត់» ដើម្បីប្រើនៅក្រៅ claude.ai។'}</div></div>
 <div class="inline"><button class="btn pri" data-act="pdf" id="pdfbtn">Save as PDF</button><button class="btn" data-act="agreflow">រៀបទំព័រឡើងវិញ</button><button class="btn danger" data-act="agreset">កំណត់ការកែឡើងវិញ</button></div></div>
 <div><div class="pvhead"><h2>មើលជាមុន (A4)</h2></div><div class="pv" id="pv"></div></div></div>`;
   updatePreview();
@@ -1361,7 +1413,7 @@ document.addEventListener('input', e => {
   }
   if (t.classList && t.classList.contains('ed') && t.dataset.k){ S.agr[t.dataset.k] = t.innerText.replace(/\n$/, ''); save(); sheetDirty(t.dataset.k); return; }
   if (t.id === 'tq'){ tq = t.value; fillTeacherOptions(); return; }
-  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3'], place:['f.p1','f.p2','hf.p1','hf.p2','hf.p3'], monthFrom:['d.from','h.d.from'], monthTo:['d.to','h.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
+  if (t.dataset.set){ S.s[t.dataset.set] = t.value; { const dk = {monthFrom:['d.from'], monthTo:['d.to'], year:['d.y1','d.y2'], agrDate:['f.d1','f.p1','f.d2','f.p2','f.d3','hf.d1','hf.p1','hf.d2','hf.p2','hf.d3','hf.p3','of.d1','of.p1','of.d2','of.p2','of.d3','of.p3'], place:['f.p1','f.p2','hf.p1','hf.p2','hf.p3','of.p1','of.p2','of.p3'], monthFrom:['d.from','h.d.from','o.d.from'], monthTo:['d.to','h.d.to','o.d.to'], year:['d.y1','d.y2','h.d.y1','h.d.y2','o.d.y1','o.d.y2']}[t.dataset.set]; if (dk) dk.forEach(k => delete S.agr[k]); } save(); if (t.dataset.set === 'agrDate'){ const pv = $('#agrDatePrev'); if (pv) pv.innerHTML = agrPrev(); } if (t.dataset.set === 'sheetUrl'){ const a = $('a[target=_blank]'); if (a) a.href = t.value; } }
   else if (t.dataset.mlist){ S.ui.monthsBy = S.ui.monthsBy || {}; S.ui.monthsBy[t.dataset.mlist] = t.value; save(); updatePreview(); }
   else if (t.dataset.title){ S.ui.titles[t.dataset.title] = t.value; save(); updatePreview(); }
   else if (t.dataset.ui === 'month'){ S.ui.month = t.value; save(); updatePreview(); }
@@ -1448,8 +1500,8 @@ document.addEventListener('click', async e => {
   }
   else if (a === 'sync') syncSheet();
   else if (a === 'copyScript'){ const ta = $('#scriptCode'); try{ navigator.clipboard.writeText(APPS_SCRIPT).then(() => { b.textContent = 'បានចម្លង ✓'; }); }catch(e){ ta.select(); document.execCommand('copy'); b.textContent = 'បានចម្លង ✓'; } }
-  else if (a === 'shSave') sheetSave(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
-  else if (a === 'shLoad') sheetLoad(S.ui.agKind === 'homeroom' ? 'homeroom' : 'subject');
+  else if (a === 'shSave') sheetSave(curKind());
+  else if (a === 'shLoad') sheetLoad(curKind());
   else if (a === 'agKind'){ S.ui.agKind = b.dataset.v; save(); renderAgree(); }
   else if (a === 'agreflow') updatePreview();
   else if (a === 'planYearBtn'){ S.s.plan.year = +b.dataset.y; clearPlanEdits(); save(); renderSettings(); }
