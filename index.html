@@ -1072,6 +1072,9 @@ async function syncSheet(){
 
 /* ---------- save / load agreement edits in the connected Google Sheet (by teacher name) ---------- */
 const APPS_SCRIPT = "const KEY = '';  // (ជម្រើស) ពាក្យសម្ងាត់ — ត្រូវដូចក្នុង App\nconst TABS = {subject: 'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom: 'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};\nconst HEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];\nconst norm = s => String(s).replace(/\\s+/g, '');\nfunction doPost(e) {\n  let out;\n  try {\n    const r = JSON.parse(e.postData.contents);\n    if (KEY && r.key !== KEY) throw new Error('ពាក្យសម្ងាត់មិនត្រូវ');\n    const name = TABS[r.kind]; if (!name) throw new Error('kind');\n    const ss = SpreadsheetApp.getActive();\n    let sh = ss.getSheetByName(name);\n    if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, 7).setValues([HEAD]); sh.setFrozenRows(1); }\n    const last = Math.max(sh.getLastRow(), 1);\n    const names = last > 1 ? sh.getRange(2, 1, last - 1, 1).getValues().map(x => norm(x[0])) : [];\n    const idx = names.indexOf(norm(r.teacher));\n    if (r.op === 'save') {\n      const ch = []; for (let i = 0; i < 4; i++) ch.push(String(r.data).slice(i * 40000, (i + 1) * 40000));\n      const row = idx >= 0 ? idx + 2 : last + 1;\n      sh.getRange(row, 1, 1, 7).setValues([[r.teacher, r.desc || '', Utilities.formatDate(new Date(), 'Asia/Phnom_Penh', 'dd/MM/yyyy HH:mm'), ch[0], ch[1], ch[2], ch[3]]]);\n      out = {ok: true, row: row};\n    } else if (r.op === 'load') {\n      if (idx < 0) out = {ok: true, found: false};\n      else { const v = sh.getRange(idx + 2, 1, 1, 7).getValues()[0]; out = {ok: true, found: true, at: String(v[2]), data: v.slice(3).join('')}; }\n    } else throw new Error('op');\n  } catch (err) { out = {ok: false, error: String(err.message || err)}; }\n  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);\n}";
+/* ជាប់រហូត៖ ដាក់តំណ Apps Script ទីនេះ (…/exec) ដើម្បីប្រើគ្រប់ម៉ាស៊ីនដោយមិនបាច់បញ្ចូលម្តងទៀត */
+const APP_SCRIPT_URL = '';
+const scriptUrl = () => ((S.s.scriptUrl || '').trim() || APP_SCRIPT_URL);
 const AGTAB = {subject:'កិច្ចព្រមព្រៀង គ្រូមុខវិជ្ជា', homeroom:'កិច្ចព្រមព្រៀង គ្រូបន្ទុកថ្នាក់'};
 const AGHEAD = ['ឈ្មោះគ្រូ', 'មុខវិជ្ជា / ថ្នាក់', 'ធ្វើបច្ចុប្បន្នភាព', 'ទិន្នន័យ (JSON) ១', 'ទិន្នន័យ (JSON) ២', 'ទិន្នន័យ (JSON) ៣', 'ទិន្នន័យ (JSON) ៤'];
 const AGCHUNK = 40000, AGCOLS = 4;
@@ -1107,10 +1110,10 @@ async function shFindRow(kind){
   rows.forEach((row, i) => { if (idx < 0 && keyName(row[0] || '') === key) idx = i; });
   return {rows, idx};
 }
-const shCan = () => !!(MCP || (S.s.scriptUrl || '').trim());
+const shCan = () => !!(MCP || scriptUrl());
 function shReady(){
   if (!shCan()){ shMsg('ត្រូវភ្ជាប់ Apps Script (ក្នុង «១. ការកំណត់» → តំណ Apps Script) ដើម្បីរក្សាទុកទៅ Sheet នៅក្រៅ claude.ai។', true); return false; }
-  if (!MCP && !/^https:\/\/script\.google\.com\//.test((S.s.scriptUrl || '').trim())){ shMsg('តំណ Apps Script មិនត្រឹមត្រូវ (ត្រូវចាប់ផ្តើមដោយ https://script.google.com/)។', true); return false; }
+  if (!MCP && !/^https:\/\/script\.google\.com\//.test(scriptUrl())){ shMsg('តំណ Apps Script មិនត្រឹមត្រូវ (ត្រូវចាប់ផ្តើមដោយ https://script.google.com/)។', true); return false; }
   if (MCP && !sheetId()){ shMsg('តំណ Google Sheet មិនត្រឹមត្រូវ។', true); return false; }
   if (!S.s.teacher){ shMsg('សូមជ្រើសឈ្មោះគ្រូក្នុង «១. ការកំណត់» ជាមុន។', true); return false; }
   if (sheetBusy){ shMsg('កំពុងដំណើរការ… សូមរង់ចាំ។', false); return false; }
@@ -1119,7 +1122,7 @@ function shReady(){
 async function scriptCall(body){
   // plain-text POST = a "simple" CORS request; Apps Script answers JSON
   let res;
-  try{ res = await fetch(S.s.scriptUrl.trim(), {method:'POST', body: JSON.stringify({...body, key: S.s.scriptKey || ''}), redirect:'follow'}); }
+  try{ res = await fetch(scriptUrl(), {method:'POST', body: JSON.stringify({...body, key: S.s.scriptKey || ''}), redirect:'follow'}); }
   catch(e){ const er = new Error('network'); er.code = 'script_net'; throw er; }
   let j; try{ j = await res.json(); }catch(e){ const er = new Error('bad'); er.code = 'script_bad'; throw er; }
   if (!j.ok){ const er = new Error(j.error || 'error'); er.code = 'script_err'; throw er; }
@@ -1227,7 +1230,7 @@ ${field('ឆ្នាំសិក្សា', 'year', '២០២៦ - ២០២�
 <div class="card"><h2>ភ្ជាប់ Apps Script (សរសេរ Google Sheet នៅក្រៅ claude.ai)</h2>
 <p class="help" style="margin-top:0">ចាំបាច់តែពេលប្រើ App នៅលើ Vercel/ម៉ាស៊ីនផ្សេង ដើម្បី «រក្សាទុកទៅ Sheet / ទាញពី Sheet»។ ធ្វើម្តងគត់៖</p>
 <ol class="help" style="margin:0 0 8px 18px;padding:0;line-height:1.7"><li>បើក Google Sheet របស់អ្នក → <b>Extensions → Apps Script</b></li><li>លុបកូដចាស់ ហើយបិទភ្ជាប់កូដខាងក្រោម រួចចុច Save</li><li>ចុច <b>Deploy → New deployment → Web app</b> → Execute as: <b>Me</b> · Who has access: <b>Anyone</b> → Deploy (អនុញ្ញាតសិទ្ធិ)</li><li>ចម្លងតំណ Web app (…/exec) មកបិទភ្ជាប់ខាងក្រោម</li></ol>
-<div class="field"><label for="scriptUrl">តំណ Apps Script (Web app URL)</label><input id="scriptUrl" type="url" data-set="scriptUrl" value="${esc(S.s.scriptUrl || '')}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div>
+<div class="field"><label for="scriptUrl">តំណ Apps Script (Web app URL)</label><input id="scriptUrl" type="url" data-set="scriptUrl" value="${esc(S.s.scriptUrl || '')}" placeholder="${esc(APP_SCRIPT_URL || 'https://script.google.com/macros/s/…/exec')}" autocomplete="off"></div>
 <div class="field"><label for="scriptKey">ពាក្យសម្ងាត់ (ជម្រើស — ត្រូវដូចក្នុងកូដ «const KEY»)</label><input id="scriptKey" type="text" data-set="scriptKey" value="${esc(S.s.scriptKey || '')}" autocomplete="off"></div>
 <details><summary style="cursor:pointer;font-weight:600">កូដ Apps Script (ចុចបើក)</summary><textarea id="scriptCode" readonly rows="10" style="width:100%;font-family:monospace;font-size:12px;margin-top:8px">${esc(APPS_SCRIPT)}</textarea><div class="inline" style="margin-top:6px"><button type="button" class="btn sm" data-act="copyScript">ចម្លងកូដ</button></div></details>
 <p class="help" style="margin-bottom:0">សុវត្ថិភាព៖ អ្នកណាមានតំណនេះអាចអាន/សរសេរផ្ទាំងកិច្ចព្រមព្រៀងបាន។ ដាក់ពាក្យសម្ងាត់ដើម្បីការពារ។ តំណ Sheet ក្នុង App អានបានតែ Sheet ដែលចែករំលែកជា «Anyone with link: Viewer» ដដែល។</p></div>
